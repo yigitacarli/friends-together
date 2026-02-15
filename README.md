@@ -1,4 +1,4 @@
-# 🌍 Friends Together - Sosyal Medya Takip Platformu
+# 🌍 Friends Together - Arkadaşlar Arası Sosyal Medya Platformu
 
 **Friends Together**, arkadaşlarınla film, dizi, kitap ve oyun deneyimlerini paylaşabileceğin, modern ve güvenli bir sosyal ağdır. Ne izlediğini, ne okuduğunu takip et, incelemelerini yaz ve arkadaşlarının neler yaptığını keşfet!
 
