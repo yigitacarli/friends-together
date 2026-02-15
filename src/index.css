@@ -1475,6 +1475,15 @@ textarea {
   gap: 16px;
 }
 
+.login-form .form-group {
+  margin-bottom: 0;
+}
+
+.login-form .form-label {
+  text-align: left;
+  display: block;
+}
+
 .login-error {
   color: #f87171;
   font-size: 0.82rem;
@@ -1499,6 +1508,28 @@ textarea {
   font-size: 0.85rem;
 }
 
+.login-guest {
+  text-align: center;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.login-guest-btn {
+  background: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.login-guest-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-glass-hover);
+}
+
 .login-toggle {
   background: none;
   color: var(--accent-secondary);
@@ -1516,6 +1547,7 @@ textarea {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  justify-content: center;
 }
 
 .avatar-option {

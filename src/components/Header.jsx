@@ -1,7 +1,7 @@
 import { useAuth } from '../context/AuthContext';
 
-export default function Header({ searchQuery, onSearchChange, onAddClick, onMenuToggle }) {
-    const { logout, profile } = useAuth();
+export default function Header({ searchQuery, onSearchChange, onAddClick, onMenuToggle, isGuest, onLoginClick }) {
+    const { logout, profile, isLoggedIn } = useAuth();
 
     return (
         <header className="header">
@@ -20,19 +20,28 @@ export default function Header({ searchQuery, onSearchChange, onAddClick, onMenu
                 </div>
             </div>
             <div className="header-right">
-                <button className="btn btn-primary" onClick={onAddClick}>
-                    <span>+</span>
-                    <span>Yeni Ekle</span>
-                </button>
-                <button
-                    className="btn btn-secondary"
-                    onClick={logout}
-                    title="Çıkış Yap"
-                    style={{ gap: 6 }}
-                >
-                    <span>🚪</span>
-                    <span>Çıkış</span>
-                </button>
+                {isLoggedIn ? (
+                    <>
+                        <button className="btn btn-primary" onClick={onAddClick}>
+                            <span>+</span>
+                            <span>Yeni Ekle</span>
+                        </button>
+                        <button
+                            className="btn btn-secondary"
+                            onClick={logout}
+                            title="Çıkış Yap"
+                            style={{ gap: 6 }}
+                        >
+                            <span>🚪</span>
+                            <span>Çıkış</span>
+                        </button>
+                    </>
+                ) : (
+                    <button className="btn btn-primary" onClick={onLoginClick}>
+                        <span>🔐</span>
+                        <span>Giriş Yap</span>
+                    </button>
+                )}
             </div>
         </header>
     );

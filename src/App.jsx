@@ -25,12 +25,12 @@ export default function App() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
   const [saving, setSaving] = useState(false);
   const [users, setUsers] = useState([]);
+  const [guestMode, setGuestMode] = useState(false);
 
   useEffect(() => {
-    if (isLoggedIn) {
-      getAllUsers().then(setUsers);
-    }
-  }, [isLoggedIn]);
+    // Load users for both logged-in users and guests
+    getAllUsers().then(setUsers);
+  }, [isLoggedIn, guestMode]);
 
   const navigate = useCallback((p) => {
     setPage(p);
@@ -44,6 +44,7 @@ export default function App() {
   }, []);
 
   const handleSave = async (data) => {
+    if (!isLoggedIn) return;
     setSaving(true);
     try {
       if (editItem) {
@@ -62,6 +63,7 @@ export default function App() {
   };
 
   const handleEdit = (item) => {
+    if (!isLoggedIn) return;
     if (item.userId && item.userId !== user?.uid) {
       alert('Sadece kendi eklediğin medyaları düzenleyebilirsin!');
       return;
@@ -71,6 +73,7 @@ export default function App() {
   };
 
   const handleDelete = (id, ownerId) => {
+    if (!isLoggedIn) return;
     if (ownerId && ownerId !== user?.uid) {
       alert('Sadece kendi eklediğin medyaları silebilirsin!');
       return;
@@ -102,9 +105,9 @@ export default function App() {
     );
   }
 
-  // Not logged in → show login page
-  if (!isLoggedIn) {
-    return <Login />;
+  // Not logged in and not guest → show login page
+  if (!isLoggedIn && !guestMode) {
+    return <Login onGuestBrowse={() => setGuestMode(true)} />;
   }
 
   const renderPage = () => {
@@ -132,7 +135,7 @@ export default function App() {
       return <Stats />;
     }
 
-    if (page === 'my-profile') {
+    if (page === 'my-profile' && isLoggedIn) {
       return (
         <UserProfile
           userId={user?.uid}
@@ -186,8 +189,17 @@ export default function App() {
         <Header
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
-          onAddClick={() => { setEditItem(null); setShowForm(true); }}
+          onAddClick={() => {
+            if (!isLoggedIn) {
+              setGuestMode(false);
+              return;
+            }
+            setEditItem(null);
+            setShowForm(true);
+          }}
           onMenuToggle={() => setSidebarOpen(o => !o)}
+          isGuest={!isLoggedIn}
+          onLoginClick={() => setGuestMode(false)}
         />
 
         <main className="page-content">
@@ -195,7 +207,7 @@ export default function App() {
         </main>
       </div>
 
-      {showForm && (
+      {showForm && isLoggedIn && (
         <MediaForm
           item={editItem}
           onSave={handleSave}

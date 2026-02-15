@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
-export default function Login() {
+export default function Login({ onGuestBrowse }) {
     const { login, register, AVATARS } = useAuth();
     const [isRegister, setIsRegister] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [displayName, setDisplayName] = useState('');
+    const [inviteCode, setInviteCode] = useState('');
     const [selectedAvatar, setSelectedAvatar] = useState('🧑‍💻');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -22,13 +23,20 @@ export default function Login() {
                     setLoading(false);
                     return;
                 }
-                await register(email, password, displayName.trim(), selectedAvatar);
+                if (!inviteCode.trim()) {
+                    setError('Davet kodu gerekli!');
+                    setLoading(false);
+                    return;
+                }
+                await register(email, password, displayName.trim(), selectedAvatar, inviteCode.trim());
             } else {
                 await login(email, password);
             }
         } catch (err) {
             console.error(err);
-            if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+            if (err.code === 'auth/invalid-invite-code') {
+                setError('Geçersiz davet kodu! Doğru kodu girin.');
+            } else if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
                 setError('E-posta veya şifre hatalı!');
             } else if (err.code === 'auth/email-already-in-use') {
                 setError('Bu e-posta zaten kullanılıyor!');
@@ -37,7 +45,7 @@ export default function Login() {
             } else if (err.code === 'auth/invalid-email') {
                 setError('Geçersiz e-posta adresi!');
             } else {
-                setError('Bir hata oluştu: ' + err.message);
+                setError('Bir hata oluştu: ' + (err.message || err));
             }
         } finally {
             setLoading(false);
@@ -94,7 +102,7 @@ export default function Login() {
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="email@example.com"
                             required
-                            autoFocus
+                            autoFocus={!isRegister}
                         />
                     </div>
 
@@ -109,6 +117,22 @@ export default function Login() {
                             minLength={6}
                         />
                     </div>
+
+                    {isRegister && (
+                        <div className="form-group">
+                            <label className="form-label">🔑 Davet Kodu</label>
+                            <input
+                                type="text"
+                                value={inviteCode}
+                                onChange={(e) => setInviteCode(e.target.value)}
+                                placeholder="Arkadaşından aldığın kodu gir..."
+                                required
+                            />
+                            <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                                Hesap oluşturmak için davet kodu gerekli.
+                            </p>
+                        </div>
+                    )}
 
                     {error && <p className="login-error">{error}</p>}
 
@@ -127,6 +151,12 @@ export default function Login() {
                             {isRegister ? 'Giriş Yap' : 'Kayıt Ol'}
                         </button>
                     </p>
+                </div>
+
+                <div className="login-guest">
+                    <button className="login-guest-btn" onClick={onGuestBrowse} type="button">
+                        👀 Giriş yapmadan göz at
+                    </button>
                 </div>
             </div>
         </div>

@@ -33,12 +33,20 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onToggle }) {
     return (
         <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
             {/* User avatar in sidebar */}
-            {profile && (
+            {profile ? (
                 <div className="sidebar-user" onClick={() => onNavigate('my-profile')}>
                     <span className="sidebar-user-avatar">{profile.avatar}</span>
                     <div className="sidebar-user-info">
                         <span className="sidebar-user-name">{profile.displayName}</span>
                         <span className="sidebar-user-email">{profile.email}</span>
+                    </div>
+                </div>
+            ) : (
+                <div className="sidebar-user">
+                    <span className="sidebar-user-avatar">👀</span>
+                    <div className="sidebar-user-info">
+                        <span className="sidebar-user-name">Misafir</span>
+                        <span className="sidebar-user-email">Sadece görüntüleme</span>
                     </div>
                 </div>
             )}
