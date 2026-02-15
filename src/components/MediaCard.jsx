@@ -23,6 +23,7 @@ export default function MediaCard({ item, onClick, view = 'grid' }) {
                         {typeInfo.icon} {typeInfo.label}
                         {subtitle ? ` · ${subtitle}` : ''}
                         {' · '}{statusInfo.label}
+                        {item.userName ? ` · ${item.userName}` : ''}
                         {item.date ? ` · ${item.date}` : ''}
                     </div>
                 </div>
@@ -50,6 +51,9 @@ export default function MediaCard({ item, onClick, view = 'grid' }) {
             </div>
             <div className="media-card-body">
                 <div className="media-card-title">{item.title}</div>
+                {item.userName && (
+                    <div className="media-card-owner">👤 {item.userName}</div>
+                )}
                 {subtitle && (
                     <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {subtitle}

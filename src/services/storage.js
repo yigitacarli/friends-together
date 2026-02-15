@@ -9,14 +9,15 @@ import {
     deleteDoc,
     query,
     orderBy,
+    where,
     serverTimestamp,
 } from 'firebase/firestore';
 
-const COLLECTION = 'media';
+const MEDIA_COLLECTION = 'media';
 
 export async function getAllMedia() {
     try {
-        const q = query(collection(db, COLLECTION), orderBy('createdAt', 'desc'));
+        const q = query(collection(db, MEDIA_COLLECTION), orderBy('createdAt', 'desc'));
         const snapshot = await getDocs(q);
         return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     } catch (err) {
@@ -25,9 +26,24 @@ export async function getAllMedia() {
     }
 }
 
+export async function getMediaByUser(userId) {
+    try {
+        const q = query(
+            collection(db, MEDIA_COLLECTION),
+            where('userId', '==', userId),
+            orderBy('createdAt', 'desc')
+        );
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (err) {
+        console.error('getMediaByUser error:', err);
+        return [];
+    }
+}
+
 export async function getMediaById(id) {
     try {
-        const snap = await getDoc(doc(db, COLLECTION, id));
+        const snap = await getDoc(doc(db, MEDIA_COLLECTION, id));
         if (!snap.exists()) return null;
         return { id: snap.id, ...snap.data() };
     } catch (err) {
@@ -36,7 +52,7 @@ export async function getMediaById(id) {
     }
 }
 
-export async function addMedia(item) {
+export async function addMedia(item, userId, userDisplayName) {
     const newItem = {
         title: item.title || '',
         type: item.type || 'movie',
@@ -54,15 +70,17 @@ export async function addMedia(item) {
         artist: item.artist || '',
         techStack: item.techStack || '',
         githubUrl: item.githubUrl || '',
+        userId: userId,
+        userName: userDisplayName,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
     };
-    const docRef = await addDoc(collection(db, COLLECTION), newItem);
+    const docRef = await addDoc(collection(db, MEDIA_COLLECTION), newItem);
     return { id: docRef.id, ...newItem };
 }
 
 export async function updateMedia(id, updates) {
-    const ref = doc(db, COLLECTION, id);
+    const ref = doc(db, MEDIA_COLLECTION, id);
     await updateDoc(ref, {
         ...updates,
         updatedAt: serverTimestamp(),
@@ -71,7 +89,18 @@ export async function updateMedia(id, updates) {
 }
 
 export async function deleteMedia(id) {
-    await deleteDoc(doc(db, COLLECTION, id));
+    await deleteDoc(doc(db, MEDIA_COLLECTION, id));
+}
+
+// --- Users ---
+export async function getAllUsers() {
+    try {
+        const snapshot = await getDocs(collection(db, 'users'));
+        return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (err) {
+        console.error('getAllUsers error:', err);
+        return [];
+    }
 }
 
 export const MEDIA_TYPES = {

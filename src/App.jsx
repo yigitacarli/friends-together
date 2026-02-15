@@ -1,28 +1,36 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import MediaForm from './components/MediaForm';
-import LoginModal from './components/LoginModal';
 import Dashboard from './pages/Dashboard';
 import MediaList from './pages/MediaList';
 import MediaDetail from './pages/MediaDetail';
 import Stats from './pages/Stats';
+import Feed from './pages/Feed';
+import UserProfile from './pages/UserProfile';
+import Login from './pages/Login';
 import { useMedia } from './context/MediaContext';
 import { useAuth } from './context/AuthContext';
-import { MEDIA_TYPES } from './services/storage';
+import { getAllUsers, MEDIA_TYPES } from './services/storage';
 
 export default function App() {
   const { add, update, remove } = useMedia();
-  const { isAdmin } = useAuth();
+  const { user, profile, isLoggedIn, loading: authLoading } = useAuth();
   const [page, setPage] = useState('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [detailId, setDetailId] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      getAllUsers().then(setUsers);
+    }
+  }, [isLoggedIn]);
 
   const navigate = useCallback((p) => {
     setPage(p);
@@ -54,17 +62,17 @@ export default function App() {
   };
 
   const handleEdit = (item) => {
-    if (!isAdmin) {
-      setShowLogin(true);
+    if (item.userId && item.userId !== user?.uid) {
+      alert('Sadece kendi eklediğin medyaları düzenleyebilirsin!');
       return;
     }
     setEditItem(item);
     setShowForm(true);
   };
 
-  const handleDelete = (id) => {
-    if (!isAdmin) {
-      setShowLogin(true);
+  const handleDelete = (id, ownerId) => {
+    if (ownerId && ownerId !== user?.uid) {
+      alert('Sadece kendi eklediğin medyaları silebilirsin!');
       return;
     }
     setShowDeleteConfirm(id);
@@ -78,19 +86,26 @@ export default function App() {
         setDetailId(null);
       } catch (err) {
         console.error('Delete error:', err);
-        alert('Silme hatası! Lütfen tekrar dene.');
       }
     }
   };
 
-  const handleAddClick = () => {
-    if (!isAdmin) {
-      setShowLogin(true);
-      return;
-    }
-    setEditItem(null);
-    setShowForm(true);
-  };
+  // Auth loading
+  if (authLoading) {
+    return (
+      <div className="login-page">
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '3rem', animation: 'float 2s ease infinite' }}>📋</div>
+          <p style={{ color: 'var(--text-muted)', marginTop: 16 }}>Yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Not logged in → show login page
+  if (!isLoggedIn) {
+    return <Login />;
+  }
 
   const renderPage = () => {
     if (detailId) {
@@ -100,7 +115,7 @@ export default function App() {
           onBack={() => setDetailId(null)}
           onEdit={handleEdit}
           onDelete={handleDelete}
-          isAdmin={isAdmin}
+          currentUserId={user?.uid}
         />
       );
     }
@@ -109,8 +124,37 @@ export default function App() {
       return <Dashboard onNavigate={navigate} onViewDetail={viewDetail} />;
     }
 
+    if (page === 'feed') {
+      return <Feed />;
+    }
+
     if (page === 'stats') {
       return <Stats />;
+    }
+
+    if (page === 'my-profile') {
+      return (
+        <UserProfile
+          userId={user?.uid}
+          userName={profile?.displayName}
+          userAvatar={profile?.avatar}
+          onViewDetail={viewDetail}
+        />
+      );
+    }
+
+    // user-{userId} pages
+    if (page.startsWith('user-')) {
+      const uid = page.replace('user-', '');
+      const targetUser = users.find(u => u.id === uid);
+      return (
+        <UserProfile
+          userId={uid}
+          userName={targetUser?.displayName || 'Kullanıcı'}
+          userAvatar={targetUser?.avatar || '🧑‍💻'}
+          onViewDetail={viewDetail}
+        />
+      );
     }
 
     if (MEDIA_TYPES[page]) {
@@ -142,9 +186,8 @@ export default function App() {
         <Header
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
-          onAddClick={handleAddClick}
+          onAddClick={() => { setEditItem(null); setShowForm(true); }}
           onMenuToggle={() => setSidebarOpen(o => !o)}
-          onLoginClick={() => setShowLogin(true)}
         />
 
         <main className="page-content">
@@ -161,13 +204,6 @@ export default function App() {
         />
       )}
 
-      {showLogin && (
-        <LoginModal
-          onClose={() => setShowLogin(false)}
-          onSuccess={() => setShowLogin(false)}
-        />
-      )}
-
       {showDeleteConfirm && (
         <div className="modal-overlay" onClick={() => setShowDeleteConfirm(null)}>
           <div className="modal" style={{ maxWidth: 400 }} onClick={(e) => e.stopPropagation()}>
@@ -177,12 +213,8 @@ export default function App() {
                 <h3 className="confirm-dialog-title">Silmek istediğine emin misin?</h3>
                 <p className="confirm-dialog-text">Bu işlem geri alınamaz.</p>
                 <div className="confirm-dialog-buttons">
-                  <button className="btn btn-secondary" onClick={() => setShowDeleteConfirm(null)}>
-                    Vazgeç
-                  </button>
-                  <button className="btn btn-danger" onClick={confirmDelete}>
-                    Evet, Sil
-                  </button>
+                  <button className="btn btn-secondary" onClick={() => setShowDeleteConfirm(null)}>Vazgeç</button>
+                  <button className="btn btn-danger" onClick={confirmDelete}>Evet, Sil</button>
                 </div>
               </div>
             </div>

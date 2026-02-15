@@ -1,9 +1,11 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getAllMedia, addMedia, updateMedia, deleteMedia } from '../services/storage';
+import { useAuth } from './AuthContext';
 
 const MediaContext = createContext(null);
 
 export function MediaProvider({ children }) {
+    const { user, profile } = useAuth();
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -24,9 +26,10 @@ export function MediaProvider({ children }) {
     }, [refresh]);
 
     const add = useCallback(async (item) => {
-        await addMedia(item);
+        if (!user || !profile) return;
+        await addMedia(item, user.uid, profile.displayName);
         await refresh();
-    }, [refresh]);
+    }, [refresh, user, profile]);
 
     const update = useCallback(async (id, data) => {
         await updateMedia(id, data);
@@ -42,20 +45,21 @@ export function MediaProvider({ children }) {
         return items.find(i => i.id === id) || null;
     }, [items]);
 
-    const getByType = useCallback((type) => {
-        return items.filter(i => i.type === type);
+    const getByUser = useCallback((userId) => {
+        return items.filter(i => i.userId === userId);
     }, [items]);
 
-    const search = useCallback((query) => {
-        if (!query) return items;
-        const q = query.toLowerCase().trim();
+    const search = useCallback((q) => {
+        if (!q) return items;
+        const query = q.toLowerCase().trim();
         return items.filter(i =>
-            i.title?.toLowerCase().includes(q) ||
-            i.review?.toLowerCase().includes(q) ||
-            i.author?.toLowerCase().includes(q) ||
-            i.director?.toLowerCase().includes(q) ||
-            i.artist?.toLowerCase().includes(q) ||
-            i.tags?.some(t => t.toLowerCase().includes(q))
+            i.title?.toLowerCase().includes(query) ||
+            i.review?.toLowerCase().includes(query) ||
+            i.author?.toLowerCase().includes(query) ||
+            i.director?.toLowerCase().includes(query) ||
+            i.artist?.toLowerCase().includes(query) ||
+            i.userName?.toLowerCase().includes(query) ||
+            i.tags?.some(t => t.toLowerCase().includes(query))
         );
     }, [items]);
 
@@ -68,7 +72,7 @@ export function MediaProvider({ children }) {
             update,
             remove,
             getById,
-            getByType,
+            getByUser,
             search,
         }}>
             {children}
