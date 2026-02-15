@@ -1,8 +1,21 @@
-import { getMediaById, MEDIA_TYPES, STATUS_TYPES, TYPE_EXTRA_FIELDS } from '../services/storage';
+import { useMedia } from '../context/MediaContext';
+import { MEDIA_TYPES, STATUS_TYPES, TYPE_EXTRA_FIELDS } from '../services/storage';
 import StarRating from '../components/StarRating';
 
 export default function MediaDetail({ mediaId, onBack, onEdit, onDelete }) {
-    const item = getMediaById(mediaId);
+    const { getById, loading } = useMedia();
+    const item = getById(mediaId);
+
+    if (loading) {
+        return (
+            <div className="detail-page">
+                <div className="empty-state">
+                    <div className="empty-state-icon" style={{ animation: 'pulse 1.5s infinite' }}>⏳</div>
+                    <h3 className="empty-state-title">Yükleniyor...</h3>
+                </div>
+            </div>
+        );
+    }
 
     if (!item) {
         return (
@@ -19,10 +32,6 @@ export default function MediaDetail({ mediaId, onBack, onEdit, onDelete }) {
 
     const typeInfo = MEDIA_TYPES[item.type] || MEDIA_TYPES.movie;
     const statusInfo = STATUS_TYPES[item.status] || STATUS_TYPES.completed;
-
-    const handleDelete = () => {
-        if (onDelete) onDelete(item.id);
-    };
 
     return (
         <div className="detail-page">
@@ -85,14 +94,13 @@ export default function MediaDetail({ mediaId, onBack, onEdit, onDelete }) {
                         <button className="btn btn-secondary" onClick={() => onEdit(item)}>
                             ✏️ Düzenle
                         </button>
-                        <button className="btn btn-danger" onClick={handleDelete}>
+                        <button className="btn btn-danger" onClick={() => onDelete(item.id)}>
                             🗑️ Sil
                         </button>
                     </div>
                 </div>
             </div>
 
-            {/* Review */}
             {item.review && (
                 <div className="detail-section">
                     <h3 className="detail-section-title">💬 Yorum & İnceleme</h3>

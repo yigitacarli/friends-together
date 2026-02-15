@@ -1,8 +1,10 @@
 import { useState, useMemo } from 'react';
-import { getAllMedia, getMediaByType, MEDIA_TYPES, STATUS_TYPES } from '../services/storage';
+import { useMedia } from '../context/MediaContext';
+import { MEDIA_TYPES, STATUS_TYPES } from '../services/storage';
 import MediaCard from '../components/MediaCard';
 
 export default function MediaList({ type, searchQuery, onViewDetail }) {
+    const { items, loading } = useMedia();
     const [filterStatus, setFilterStatus] = useState('all');
     const [filterRating, setFilterRating] = useState('all');
     const [sortBy, setSortBy] = useState('date-desc');
@@ -10,31 +12,30 @@ export default function MediaList({ type, searchQuery, onViewDetail }) {
 
     const typeInfo = MEDIA_TYPES[type];
 
-    const items = useMemo(() => {
-        let data = type ? getMediaByType(type) : getAllMedia();
+    const filteredItems = useMemo(() => {
+        let data = type ? items.filter(i => i.type === type) : [...items];
 
-        // Search filter
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
             data = data.filter(i =>
-                i.title.toLowerCase().includes(q) ||
+                i.title?.toLowerCase().includes(q) ||
                 i.review?.toLowerCase().includes(q) ||
+                i.author?.toLowerCase().includes(q) ||
+                i.director?.toLowerCase().includes(q) ||
+                i.artist?.toLowerCase().includes(q) ||
                 i.tags?.some(t => t.toLowerCase().includes(q))
             );
         }
 
-        // Status filter
         if (filterStatus !== 'all') {
             data = data.filter(i => i.status === filterStatus);
         }
 
-        // Rating filter
         if (filterRating !== 'all') {
             const r = parseInt(filterRating);
             data = data.filter(i => i.rating === r);
         }
 
-        // Sort
         switch (sortBy) {
             case 'date-desc':
                 data.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
@@ -57,7 +58,7 @@ export default function MediaList({ type, searchQuery, onViewDetail }) {
         }
 
         return data;
-    }, [type, searchQuery, filterStatus, filterRating, sortBy]);
+    }, [items, type, searchQuery, filterStatus, filterRating, sortBy]);
 
     const LABELS = {
         book: 'Kitaplar',
@@ -70,14 +71,22 @@ export default function MediaList({ type, searchQuery, onViewDetail }) {
 
     const pageTitle = type ? `${typeInfo?.icon || ''} ${LABELS[type] || type}` : '📖 Tüm Medyalar';
 
+    if (loading) {
+        return (
+            <div className="empty-state">
+                <div className="empty-state-icon" style={{ animation: 'pulse 1.5s infinite' }}>⏳</div>
+                <h3 className="empty-state-title">Yükleniyor...</h3>
+            </div>
+        );
+    }
+
     return (
         <div>
             <div className="section-header">
                 <h2 className="section-title" style={{ fontSize: '1.4rem' }}>{pageTitle}</h2>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{items.length} öğe</span>
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{filteredItems.length} öğe</span>
             </div>
 
-            {/* Controls */}
             <div className="media-list-controls">
                 <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
                     <option value="all">Tüm Durumlar</option>
@@ -108,17 +117,16 @@ export default function MediaList({ type, searchQuery, onViewDetail }) {
                 </div>
             </div>
 
-            {/* Items */}
-            {items.length > 0 ? (
+            {filteredItems.length > 0 ? (
                 view === 'grid' ? (
                     <div className="media-grid">
-                        {items.map(item => (
+                        {filteredItems.map(item => (
                             <MediaCard key={item.id} item={item} onClick={() => onViewDetail(item.id)} view="grid" />
                         ))}
                     </div>
                 ) : (
                     <div className="media-list-view">
-                        {items.map(item => (
+                        {filteredItems.map(item => (
                             <MediaCard key={item.id} item={item} onClick={() => onViewDetail(item.id)} view="list" />
                         ))}
                     </div>

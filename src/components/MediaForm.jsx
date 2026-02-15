@@ -19,7 +19,7 @@ const EMPTY_FORM = {
     artist: '',
 };
 
-export default function MediaForm({ item, onSave, onClose }) {
+export default function MediaForm({ item, onSave, onClose, saving }) {
     const [form, setForm] = useState(EMPTY_FORM);
 
     useEffect(() => {
@@ -172,9 +172,9 @@ export default function MediaForm({ item, onSave, onClose }) {
                         </div>
                     </div>
                     <div className="modal-footer">
-                        <button type="button" className="btn btn-secondary" onClick={onClose}>Vazgeç</button>
-                        <button type="submit" className="btn btn-primary">
-                            {isEdit ? 'Güncelle' : 'Kaydet'}
+                        <button type="button" className="btn btn-secondary" onClick={onClose} disabled={saving}>Vazgeç</button>
+                        <button type="submit" className="btn btn-primary" disabled={saving}>
+                            {saving ? 'Kaydediliyor...' : (isEdit ? 'Güncelle' : 'Kaydet')}
                         </button>
                     </div>
                 </form>

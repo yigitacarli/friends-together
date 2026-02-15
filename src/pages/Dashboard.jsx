@@ -1,13 +1,23 @@
+import { useMedia } from '../context/MediaContext';
 import { getCategoryCounts, getCategoryDistribution, getRecentMedia, getTopRated, getAverageRating } from '../services/stats';
-import { MEDIA_TYPES } from '../services/storage';
 import MediaCard from '../components/MediaCard';
 
 export default function Dashboard({ onNavigate, onViewDetail }) {
-    const counts = getCategoryCounts();
-    const distribution = getCategoryDistribution();
-    const recent = getRecentMedia(6);
-    const topRated = getTopRated(6);
-    const avgRating = getAverageRating();
+    const { items, loading } = useMedia();
+    const counts = getCategoryCounts(items);
+    const distribution = getCategoryDistribution(items);
+    const recent = getRecentMedia(items, 6);
+    const topRated = getTopRated(items, 6);
+    const avgRating = getAverageRating(items);
+
+    if (loading) {
+        return (
+            <div className="empty-state">
+                <div className="empty-state-icon" style={{ animation: 'pulse 1.5s infinite' }}>⏳</div>
+                <h3 className="empty-state-title">Yükleniyor...</h3>
+            </div>
+        );
+    }
 
     return (
         <div>
@@ -16,7 +26,6 @@ export default function Dashboard({ onNavigate, onViewDetail }) {
                 <p>Medya kütüphaneni buradan takip edebilirsin.</p>
             </div>
 
-            {/* Stats Grid */}
             <div className="stats-grid">
                 <div className="stat-card" style={{ animationDelay: '0s' }}>
                     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, borderRadius: '16px 16px 0 0', background: 'var(--accent-gradient)' }} />
@@ -47,7 +56,6 @@ export default function Dashboard({ onNavigate, onViewDetail }) {
                 )}
             </div>
 
-            {/* Recent */}
             {recent.length > 0 && (
                 <div className="section">
                     <div className="section-header">
@@ -61,7 +69,6 @@ export default function Dashboard({ onNavigate, onViewDetail }) {
                 </div>
             )}
 
-            {/* Top Rated */}
             {topRated.length > 0 && (
                 <div className="section">
                     <div className="section-header">
@@ -75,7 +82,6 @@ export default function Dashboard({ onNavigate, onViewDetail }) {
                 </div>
             )}
 
-            {/* Empty State */}
             {counts.total === 0 && (
                 <div className="empty-state">
                     <div className="empty-state-icon">📭</div>

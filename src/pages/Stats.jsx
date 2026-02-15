@@ -1,17 +1,30 @@
-import { getCategoryDistribution, getStatusDistribution, getAverageRatingByType, getMonthlyActivity } from '../services/stats';
+import { useMedia } from '../context/MediaContext';
+import { getCategoryDistribution, getStatusDistribution, getAverageRatingByType, getMonthlyActivity, getCategoryCounts } from '../services/stats';
 import { MEDIA_TYPES, STATUS_TYPES } from '../services/storage';
-import { getCategoryCounts } from '../services/stats';
 
 export default function Stats() {
-    const distribution = getCategoryDistribution();
-    const statusDist = getStatusDistribution();
-    const avgByType = getAverageRatingByType();
-    const monthly = getMonthlyActivity();
-    const counts = getCategoryCounts();
+    const { items, loading } = useMedia();
+    const distribution = getCategoryDistribution(items);
+    const statusDist = getStatusDistribution(items);
+    const avgByType = getAverageRatingByType(items);
+    const monthly = getMonthlyActivity(items);
+    const counts = getCategoryCounts(items);
 
     const maxCount = Math.max(...distribution.map(d => d.count), 1);
     const totalStatus = Object.values(statusDist).reduce((a, b) => a + b, 0) || 1;
     const maxMonthly = Math.max(...monthly.map(m => m.count), 1);
+
+    if (loading) {
+        return (
+            <div>
+                <h2 className="section-title" style={{ fontSize: '1.4rem', marginBottom: 24 }}>📊 İstatistikler</h2>
+                <div className="empty-state">
+                    <div className="empty-state-icon" style={{ animation: 'pulse 1.5s infinite' }}>⏳</div>
+                    <h3 className="empty-state-title">Yükleniyor...</h3>
+                </div>
+            </div>
+        );
+    }
 
     if (counts.total === 0) {
         return (
@@ -31,7 +44,6 @@ export default function Stats() {
             <h2 className="section-title" style={{ fontSize: '1.4rem', marginBottom: 24 }}>📊 İstatistikler</h2>
 
             <div className="stats-page-grid">
-                {/* Category Distribution */}
                 <div className="stats-chart-card">
                     <h3 className="stats-chart-title">Kategori Dağılımı</h3>
                     {distribution.map(d => (
@@ -52,7 +64,6 @@ export default function Stats() {
                     ))}
                 </div>
 
-                {/* Status Distribution */}
                 <div className="stats-chart-card">
                     <h3 className="stats-chart-title">Durum Dağılımı</h3>
                     {Object.entries(STATUS_TYPES).map(([key, val]) => (
@@ -73,7 +84,6 @@ export default function Stats() {
                     ))}
                 </div>
 
-                {/* Average Rating by Type */}
                 <div className="stats-chart-card">
                     <h3 className="stats-chart-title">Kategori Bazlı Ort. Puan</h3>
                     {Object.entries(MEDIA_TYPES).map(([key, val]) => (
@@ -96,7 +106,6 @@ export default function Stats() {
                     ))}
                 </div>
 
-                {/* Monthly Activity */}
                 {monthly.length > 0 && (
                     <div className="stats-chart-card">
                         <h3 className="stats-chart-title">Aylık Aktivite</h3>

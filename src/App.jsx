@@ -6,19 +6,19 @@ import Dashboard from './pages/Dashboard';
 import MediaList from './pages/MediaList';
 import MediaDetail from './pages/MediaDetail';
 import Stats from './pages/Stats';
-import { addMedia, updateMedia, deleteMedia, MEDIA_TYPES } from './services/storage';
+import { useMedia } from './context/MediaContext';
+import { MEDIA_TYPES } from './services/storage';
 
 export default function App() {
+  const { add, update, remove } = useMedia();
   const [page, setPage] = useState('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [detailId, setDetailId] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
-
-  const refresh = () => setRefreshKey(k => k + 1);
+  const [saving, setSaving] = useState(false);
 
   const navigate = useCallback((p) => {
     setPage(p);
@@ -30,15 +30,22 @@ export default function App() {
     setDetailId(id);
   }, []);
 
-  const handleSave = (data) => {
-    if (editItem) {
-      updateMedia(editItem.id, data);
-    } else {
-      addMedia(data);
+  const handleSave = async (data) => {
+    setSaving(true);
+    try {
+      if (editItem) {
+        await update(editItem.id, data);
+      } else {
+        await add(data);
+      }
+      setShowForm(false);
+      setEditItem(null);
+    } catch (err) {
+      console.error('Save error:', err);
+      alert('Kaydetme hatası! Lütfen tekrar dene.');
+    } finally {
+      setSaving(false);
     }
-    setShowForm(false);
-    setEditItem(null);
-    refresh();
   };
 
   const handleEdit = (item) => {
@@ -50,12 +57,16 @@ export default function App() {
     setShowDeleteConfirm(id);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (showDeleteConfirm) {
-      deleteMedia(showDeleteConfirm);
-      setShowDeleteConfirm(null);
-      setDetailId(null);
-      refresh();
+      try {
+        await remove(showDeleteConfirm);
+        setShowDeleteConfirm(null);
+        setDetailId(null);
+      } catch (err) {
+        console.error('Delete error:', err);
+        alert('Silme hatası! Lütfen tekrar dene.');
+      }
     }
   };
 
@@ -65,11 +76,9 @@ export default function App() {
   };
 
   const renderPage = () => {
-    // Detail view
     if (detailId) {
       return (
         <MediaDetail
-          key={refreshKey}
           mediaId={detailId}
           onBack={() => setDetailId(null)}
           onEdit={handleEdit}
@@ -78,27 +87,17 @@ export default function App() {
       );
     }
 
-    // Dashboard
     if (page === 'dashboard') {
-      return (
-        <Dashboard
-          key={refreshKey}
-          onNavigate={navigate}
-          onViewDetail={viewDetail}
-        />
-      );
+      return <Dashboard onNavigate={navigate} onViewDetail={viewDetail} />;
     }
 
-    // Stats
     if (page === 'stats') {
-      return <Stats key={refreshKey} />;
+      return <Stats />;
     }
 
-    // Category pages
     if (MEDIA_TYPES[page]) {
       return (
         <MediaList
-          key={`${page}-${refreshKey}`}
           type={page}
           searchQuery={searchQuery}
           onViewDetail={viewDetail}
@@ -126,21 +125,20 @@ export default function App() {
           onMenuToggle={() => setSidebarOpen(o => !o)}
         />
 
-        <main className="page-content" key={refreshKey}>
+        <main className="page-content">
           {renderPage()}
         </main>
       </div>
 
-      {/* Add/Edit Modal */}
       {showForm && (
         <MediaForm
           item={editItem}
           onSave={handleSave}
           onClose={() => { setShowForm(false); setEditItem(null); }}
+          saving={saving}
         />
       )}
 
-      {/* Delete Confirmation */}
       {showDeleteConfirm && (
         <div className="modal-overlay" onClick={() => setShowDeleteConfirm(null)}>
           <div className="modal" style={{ maxWidth: 400 }} onClick={(e) => e.stopPropagation()}>

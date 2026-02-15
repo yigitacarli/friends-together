@@ -1,7 +1,8 @@
-import { getAllMedia, MEDIA_TYPES } from './storage';
+import { MEDIA_TYPES } from './storage';
 
-export function getCategoryCounts() {
-    const items = getAllMedia();
+// All stats functions now take items as a parameter instead of reading from storage directly
+
+export function getCategoryCounts(items) {
     const counts = {};
     Object.keys(MEDIA_TYPES).forEach(type => {
         counts[type] = items.filter(i => i.type === type).length;
@@ -10,8 +11,8 @@ export function getCategoryCounts() {
     return counts;
 }
 
-export function getCategoryDistribution() {
-    const counts = getCategoryCounts();
+export function getCategoryDistribution(items) {
+    const counts = getCategoryCounts(items);
     const total = counts.total || 1;
     return Object.keys(MEDIA_TYPES).map(type => ({
         type,
@@ -21,8 +22,7 @@ export function getCategoryDistribution() {
     }));
 }
 
-export function getStatusDistribution() {
-    const items = getAllMedia();
+export function getStatusDistribution(items) {
     const statuses = { completed: 0, 'in-progress': 0, planned: 0, dropped: 0 };
     items.forEach(i => {
         if (statuses[i.status] !== undefined) statuses[i.status]++;
@@ -30,15 +30,14 @@ export function getStatusDistribution() {
     return statuses;
 }
 
-export function getAverageRating() {
-    const items = getAllMedia().filter(i => i.rating > 0);
-    if (items.length === 0) return 0;
-    const sum = items.reduce((acc, i) => acc + i.rating, 0);
-    return (sum / items.length).toFixed(1);
+export function getAverageRating(items) {
+    const rated = items.filter(i => i.rating > 0);
+    if (rated.length === 0) return 0;
+    const sum = rated.reduce((acc, i) => acc + i.rating, 0);
+    return (sum / rated.length).toFixed(1);
 }
 
-export function getAverageRatingByType() {
-    const items = getAllMedia();
+export function getAverageRatingByType(items) {
     const result = {};
     Object.keys(MEDIA_TYPES).forEach(type => {
         const typed = items.filter(i => i.type === type && i.rating > 0);
@@ -51,28 +50,26 @@ export function getAverageRatingByType() {
     return result;
 }
 
-export function getRecentMedia(limit = 6) {
-    return getAllMedia().slice(0, limit);
+export function getRecentMedia(items, limit = 6) {
+    return items.slice(0, limit);
 }
 
-export function getTopRated(limit = 6) {
-    return getAllMedia()
+export function getTopRated(items, limit = 6) {
+    return [...items]
         .filter(i => i.rating > 0)
         .sort((a, b) => b.rating - a.rating)
         .slice(0, limit);
 }
 
-export function getMonthlyActivity() {
-    const items = getAllMedia();
+export function getMonthlyActivity(items) {
     const months = {};
     items.forEach(item => {
-        const d = item.date || item.createdAt?.split('T')[0];
+        const d = item.date;
         if (d) {
-            const month = d.substring(0, 7); // YYYY-MM
+            const month = d.substring(0, 7);
             months[month] = (months[month] || 0) + 1;
         }
     });
-    // Return last 6 months
     const sorted = Object.entries(months)
         .sort(([a], [b]) => b.localeCompare(a))
         .slice(0, 6)

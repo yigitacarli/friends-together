@@ -1,27 +1,43 @@
-const STORAGE_KEY = 'harmonic_media_items';
+import { db } from './firebase';
+import {
+    collection,
+    doc,
+    getDocs,
+    getDoc,
+    addDoc,
+    updateDoc,
+    deleteDoc,
+    query,
+    orderBy,
+    serverTimestamp,
+} from 'firebase/firestore';
 
-function generateId() {
-    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-}
+const COLLECTION = 'media';
 
-export function getAllMedia() {
+export async function getAllMedia() {
     try {
-        const data = localStorage.getItem(STORAGE_KEY);
-        return data ? JSON.parse(data) : [];
-    } catch {
+        const q = query(collection(db, COLLECTION), orderBy('createdAt', 'desc'));
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (err) {
+        console.error('getAllMedia error:', err);
         return [];
     }
 }
 
-export function getMediaById(id) {
-    const items = getAllMedia();
-    return items.find(item => item.id === id) || null;
+export async function getMediaById(id) {
+    try {
+        const snap = await getDoc(doc(db, COLLECTION, id));
+        if (!snap.exists()) return null;
+        return { id: snap.id, ...snap.data() };
+    } catch (err) {
+        console.error('getMediaById error:', err);
+        return null;
+    }
 }
 
-export function addMedia(item) {
-    const items = getAllMedia();
+export async function addMedia(item) {
     const newItem = {
-        id: generateId(),
         title: item.title || '',
         type: item.type || 'movie',
         status: item.status || 'completed',
@@ -30,57 +46,30 @@ export function addMedia(item) {
         coverUrl: item.coverUrl || '',
         date: item.date || new Date().toISOString().split('T')[0],
         tags: item.tags || [],
-        // Category-specific extra fields
         author: item.author || '',
         director: item.director || '',
         platform: item.platform || '',
         seasonCount: item.seasonCount || '',
         studio: item.studio || '',
         artist: item.artist || '',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
     };
-    items.unshift(newItem);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-    return newItem;
+    const docRef = await addDoc(collection(db, COLLECTION), newItem);
+    return { id: docRef.id, ...newItem };
 }
 
-export function updateMedia(id, updates) {
-    const items = getAllMedia();
-    const index = items.findIndex(item => item.id === id);
-    if (index === -1) return null;
-    items[index] = {
-        ...items[index],
+export async function updateMedia(id, updates) {
+    const ref = doc(db, COLLECTION, id);
+    await updateDoc(ref, {
         ...updates,
-        id, // don't allow id change
-        updatedAt: new Date().toISOString(),
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-    return items[index];
+        updatedAt: serverTimestamp(),
+    });
+    return { id, ...updates };
 }
 
-export function deleteMedia(id) {
-    const items = getAllMedia();
-    const filtered = items.filter(item => item.id !== id);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
-    return filtered;
-}
-
-export function getMediaByType(type) {
-    return getAllMedia().filter(item => item.type === type);
-}
-
-export function searchMedia(query) {
-    const q = query.toLowerCase().trim();
-    if (!q) return getAllMedia();
-    return getAllMedia().filter(item =>
-        item.title.toLowerCase().includes(q) ||
-        item.review?.toLowerCase().includes(q) ||
-        item.author?.toLowerCase().includes(q) ||
-        item.director?.toLowerCase().includes(q) ||
-        item.artist?.toLowerCase().includes(q) ||
-        item.tags?.some(tag => tag.toLowerCase().includes(q))
-    );
+export async function deleteMedia(id) {
+    await deleteDoc(doc(db, COLLECTION, id));
 }
 
 export const MEDIA_TYPES = {
@@ -99,7 +88,6 @@ export const STATUS_TYPES = {
     dropped: { label: 'Bırakıldı', color: 'var(--status-dropped)', bg: 'rgba(248, 113, 113, 0.15)' },
 };
 
-// Category-specific extra fields
 export const TYPE_EXTRA_FIELDS = {
     book: [{ key: 'author', label: 'Yazar', placeholder: 'Yazar adı...', icon: '✍️' }],
     movie: [{ key: 'director', label: 'Yönetmen', placeholder: 'Yönetmen adı...', icon: '🎥' }],
