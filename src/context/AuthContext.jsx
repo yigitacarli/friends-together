@@ -8,7 +8,7 @@ import {
     signOut,
     updateProfile,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, updateDoc, collection, onSnapshot } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, collection, onSnapshot, serverTimestamp } from 'firebase/firestore';
 
 const AuthContext = createContext(null);
 
@@ -44,6 +44,24 @@ export function AuthProvider({ children }) {
         });
         return unsub;
     }, []);
+
+    // Heartbeat for presence (every 2 mins)
+    useEffect(() => {
+        if (!user) return;
+        const updatePresence = async () => {
+            try {
+                await updateDoc(doc(db, 'users', user.uid), {
+                    lastSeen: serverTimestamp()
+                });
+            } catch (e) {
+                // ignore permission errors on logout etc
+            }
+        };
+
+        updatePresence(); // initial
+        const interval = setInterval(updatePresence, 2 * 60 * 1000); // every 2 mins
+        return () => clearInterval(interval);
+    }, [user]);
 
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -122,6 +140,13 @@ export function AuthProvider({ children }) {
             resetPassword,
             updateUserProfile,
             getUser: (uid) => allUsers[uid] || null,
+            isOnline: (uid) => {
+                const u = allUsers[uid];
+                if (!u?.lastSeen) return false;
+                const last = u.lastSeen.toDate ? u.lastSeen.toDate() : new Date(u.lastSeen);
+                const diff = (new Date() - last) / 1000;
+                return diff < 5 * 60; // 5 minutes threshold
+            },
             allUsers,
             AVATARS,
             FUNNY_TITLES,

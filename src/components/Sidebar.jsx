@@ -3,9 +3,9 @@ import { useMedia } from '../context/MediaContext';
 import { useAuth } from '../context/AuthContext';
 import { getAllUsers } from '../services/storage';
 
-export default function Sidebar({ currentPage, onNavigate, isOpen, onEditProfile }) { // add onEditProfile prop
+export default function Sidebar({ currentPage, onNavigate, isOpen, onEditProfile }) {
     const { items } = useMedia();
-    const { user, profile, isLoggedIn } = useAuth();
+    const { user, profile, isLoggedIn, isOnline } = useAuth();
     const [users, setUsers] = useState([]);
 
     useEffect(() => {
@@ -89,17 +89,35 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onEditProfile
 
                 {otherUsers.length > 0 && (
                     <>
-                        <div className="sidebar-section-title" style={{ marginTop: 12 }}>Arkadaşlar</div>
-                        {otherUsers.map(u => (
-                            <div
-                                key={u.id}
-                                className={`sidebar-link ${currentPage === `user-${u.id}` ? 'active' : ''}`}
-                                onClick={() => onNavigate(`user-${u.id}`)}
-                            >
-                                <span className="sidebar-link-icon">{u.avatar || '🧑‍💻'}</span>
-                                <span>{u.displayName}</span>
-                            </div>
-                        ))}
+                        <div className="sidebar-section-title" style={{ marginTop: 12 }}>
+                            Arkadaşlar ({otherUsers.length})
+                        </div>
+                        {otherUsers.map(u => {
+                            const online = isOnline(u.id);
+                            return (
+                                <div
+                                    key={u.id}
+                                    className={`sidebar-link ${currentPage === `user-${u.id}` ? 'active' : ''}`}
+                                    onClick={() => onNavigate(`user-${u.id}`)}
+                                >
+                                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                                        <span className="sidebar-link-icon">{u.avatar || '🧑‍💻'}</span>
+                                        <span style={{
+                                            position: 'absolute',
+                                            bottom: 0,
+                                            right: 0,
+                                            width: 10,
+                                            height: 10,
+                                            borderRadius: '50%',
+                                            background: online ? '#34d399' : '#d1d5db',
+                                            border: '2px solid var(--bg-card)',
+                                            display: 'block'
+                                        }} />
+                                    </div>
+                                    <span>{u.displayName}</span>
+                                </div>
+                            );
+                        })}
                     </>
                 )}
             </nav>
