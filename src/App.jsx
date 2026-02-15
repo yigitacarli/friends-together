@@ -1,20 +1,29 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, Suspense, lazy } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import MediaForm from './components/MediaForm';
-import Dashboard from './pages/Dashboard';
-import MediaDetail from './pages/MediaDetail';
-import Stats from './pages/Stats';
-import Feed from './pages/Feed';
-import Events from './pages/Events';
-import Lobby from './pages/Lobby'; // New
-import UserProfile from './pages/UserProfile';
-import Login from './pages/Login';
-import Community from './pages/Community'; // New page
-import EditProfileModal from './components/EditProfileModal'; // New
+import EditProfileModal from './components/EditProfileModal';
 import { useMedia } from './context/MediaContext';
 import { useAuth } from './context/AuthContext';
 import { getAllUsers } from './services/storage';
+
+// Lazy Load Pages for Performance
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const MediaDetail = lazy(() => import('./pages/MediaDetail'));
+const Stats = lazy(() => import('./pages/Stats'));
+const Feed = lazy(() => import('./pages/Feed'));
+const Events = lazy(() => import('./pages/Events'));
+const Lobby = lazy(() => import('./pages/Lobby'));
+const UserProfile = lazy(() => import('./pages/UserProfile'));
+const Login = lazy(() => import('./pages/Login'));
+const Community = lazy(() => import('./pages/Community'));
+
+const LoadingSpinner = () => (
+  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh', color: 'var(--text-muted)' }}>
+    <div style={{ fontSize: '2rem', animation: 'spin 1s linear infinite' }}>⏳</div>
+    <div style={{ marginLeft: 10 }}>Yükleniyor...</div>
+  </div>
+);
 
 export default function App() {
   const { add, update, remove } = useMedia();
@@ -31,7 +40,9 @@ export default function App() {
   const [showEditProfile, setShowEditProfile] = useState(false);
 
   useEffect(() => {
-    getAllUsers().then(setUsers);
+    if (isLoggedIn) {
+      getAllUsers().then(setUsers);
+    }
   }, [isLoggedIn]);
 
   const navigate = useCallback((p) => {
@@ -107,7 +118,11 @@ export default function App() {
   }
 
   if (!isLoggedIn) {
-    return <Login />;
+    return (
+      <Suspense fallback={<LoadingSpinner />}>
+        <Login />
+      </Suspense>
+    );
   }
 
   const renderPage = () => {
@@ -165,7 +180,7 @@ export default function App() {
         onNavigate={navigate}
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(o => !o)}
-        onEditProfile={() => setShowEditProfile(true)} // Pass trigger
+        onEditProfile={() => setShowEditProfile(true)}
       />
       {sidebarOpen && (
         <div className="sidebar-overlay visible" onClick={() => setSidebarOpen(false)} />
@@ -185,7 +200,9 @@ export default function App() {
         />
 
         <main className="page-content">
-          {renderPage()}
+          <Suspense fallback={<LoadingSpinner />}>
+            {renderPage()}
+          </Suspense>
         </main>
       </div>
 
