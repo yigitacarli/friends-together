@@ -5,7 +5,7 @@ import { getAllUsers } from '../services/storage';
 
 export default function Sidebar({ currentPage, onNavigate, isOpen, onEditProfile }) {
     const { items } = useMedia();
-    const { user, profile, isLoggedIn, isOnline } = useAuth();
+    const { user, profile, isLoggedIn, isOnline, getUser } = useAuth();
     const [users, setUsers] = useState([]);
 
     useEffect(() => {
