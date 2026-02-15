@@ -63,24 +63,71 @@ export default function Community({ onNavigate }) {
                     const myData = getUser(user.uid);
                     const status = getFriendStatus(myData, u.id);
                     const isAdminUser = u.email === 'acarliyigit@gmail.com';
+                    const joinDate = u.createdAt
+                        ? new Date(u.createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
+                        : 'Eski Üye';
 
                     let actionBtn = null;
                     if (status === 'none') {
                         actionBtn = (
-                            <button className="btn btn-primary btn-sm" onClick={() => handleSend(u.id)} disabled={actionLoading === u.id}>
-                                {actionLoading === u.id ? '...' : '➕ Ekle'}
+                            <button
+                                className="btn btn-primary"
+                                onClick={(e) => { e.stopPropagation(); handleSend(u.id); }}
+                                disabled={actionLoading === u.id}
+                                style={{
+                                    width: 48, height: 48, borderRadius: '50%', padding: 0,
+                                    fontSize: '1.4rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    flexShrink: 0
+                                }}
+                                title="Arkadaş Ekle"
+                            >
+                                {actionLoading === u.id ? '...' : '➕'}
                             </button>
                         );
                     } else if (status === 'sent') {
                         actionBtn = (
-                            <button className="btn btn-secondary btn-sm" onClick={() => handleCancel(u.id)} disabled={actionLoading === u.id} style={{ color: 'var(--text-muted)', borderColor: 'var(--border)' }}>
-                                {actionLoading === u.id ? '...' : 'İptal Et'}
+                            <button
+                                className="btn btn-secondary"
+                                onClick={(e) => { e.stopPropagation(); handleCancel(u.id); }}
+                                disabled={actionLoading === u.id}
+                                style={{
+                                    width: 48, height: 48, borderRadius: '50%', padding: 0,
+                                    fontSize: '1.2rem', color: 'var(--text-muted)', border: '2px solid var(--border)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    flexShrink: 0
+                                }}
+                                title="İsteği İptal Et (Bekliyor)"
+                            >
+                                {actionLoading === u.id ? '...' : '⏳'}
                             </button>
                         );
                     } else if (status === 'friends') {
-                        actionBtn = <span className="status-badge completed" style={{ fontSize: '0.8rem', padding: '4px 8px', background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>🤝 Arkadaşsınız</span>;
+                        actionBtn = (
+                            <div style={{
+                                width: 48, height: 48, borderRadius: '50%',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                background: 'var(--bg-secondary)', color: 'var(--accent-success)',
+                                fontSize: '1.5rem', flexShrink: 0
+                            }} title="Arkadaşsınız">
+                                🤝
+                            </div>
+                        );
                     } else if (status === 'received') {
-                        actionBtn = <button className="btn btn-primary btn-sm" onClick={() => onNavigate(`user-${u.id}`)}>📩 İsteği Gör</button>;
+                        actionBtn = (
+                            <button
+                                className="btn btn-primary"
+                                onClick={(e) => { e.stopPropagation(); onNavigate(`user-${u.id}`); }}
+                                style={{
+                                    width: 48, height: 48, borderRadius: '50%', padding: 0,
+                                    fontSize: '1.4rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    background: 'var(--accent-primary)', color: 'white',
+                                    flexShrink: 0, animation: 'pulse 2s infinite'
+                                }}
+                                title="İstek Var"
+                            >
+                                📩
+                            </button>
+                        );
                     }
 
                     return (
@@ -89,7 +136,7 @@ export default function Community({ onNavigate }) {
                             style={{
                                 flexDirection: 'row',
                                 alignItems: 'center',
-                                justifyContent: 'space-between',
+                                gap: 16,
                                 padding: '16px 20px',
                                 cursor: 'pointer',
                                 transition: 'transform 0.2s, box-shadow 0.2s',
@@ -103,22 +150,25 @@ export default function Community({ onNavigate }) {
                                 e.currentTarget.style.boxShadow = 'none';
                             }}
                         >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                <span className="feed-avatar" style={{ fontSize: '1.5rem', width: 48, height: 48 }}>{u.avatar || '🧑‍💻'}</span>
+                            {/* LEFT: Action Button */}
+                            <div onClick={e => e.stopPropagation()}>
+                                {actionBtn}
+                            </div>
+
+                            {/* MIDDLE: Avatar + Info */}
+                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 16 }}>
+                                <span className="feed-avatar" style={{ fontSize: '2rem', width: 60, height: 60 }}>{u.avatar || '🧑‍💻'}</span>
                                 <div>
-                                    <div style={{ fontWeight: 700, fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    <div style={{ fontWeight: 700, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                                         {u.displayName}
                                         <span className={`user-profile-title-badge ${isAdminUser ? 'admin-badge' : ''}`} style={{ fontSize: '0.65rem', padding: '2px 6px', marginTop: 0 }}>
                                             {isAdminUser ? '👑 Admin' : (u.title || 'Çaylak Üye')}
                                         </span>
                                     </div>
-                                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                                        {status === 'friends' ? 'Arkadaş' : 'Kullanıcı'}
+                                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                                        Katılım: {joinDate}
                                     </div>
                                 </div>
-                            </div>
-                            <div onClick={e => e.stopPropagation()}>
-                                {actionBtn}
                             </div>
                         </div>
                     );
