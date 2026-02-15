@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useMedia } from '../context/MediaContext';
-import { getAllPosts, addPost, votePost, deletePost } from '../services/posts';
+import { getAllPosts, addPost, votePost, deletePost, updatePostVisibility } from '../services/posts';
 import { getComments, addComment, deleteComment } from '../services/comments';
 import { MEDIA_TYPES, STATUS_TYPES } from '../services/storage';
 import StarRating from '../components/StarRating';
@@ -33,7 +33,7 @@ const POST_TYPES = {
 
 export default function Feed({ onViewDetail }) {
     const { user, profile, isLoggedIn, isAdmin, getUser } = useAuth();
-    const { items: mediaItems } = useMedia();
+    const { items: mediaItems, update: updateMediaItem } = useMedia();
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showCreate, setShowCreate] = useState(false);
@@ -161,6 +161,20 @@ export default function Feed({ onViewDetail }) {
         try { await deletePost(postId); await loadPosts(); } catch (err) { console.error(err); }
     };
 
+    const handleUpdateVisibility = async (item, newVisibility) => {
+        try {
+            if (item._type === 'post') {
+                await updatePostVisibility(item.id, newVisibility);
+                await loadPosts();
+            } else {
+                await updateMediaItem(item.id, { visibility: newVisibility });
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Görünürlük güncellenemedi.');
+        }
+    };
+
     const toggleComments = async (postId) => {
         setExpandedComments(prev => ({ ...prev, [postId]: !prev[postId] }));
         if (!commentsByPost[postId]) {
@@ -218,9 +232,16 @@ export default function Feed({ onViewDetail }) {
                         <span className="post-time">
                             {timeAgo(post.createdAt)}
                             {post.userId === user?.uid && (
-                                <span style={{ marginLeft: 6, fontSize: '0.8rem', opacity: 0.6 }}>
-                                    {post.visibility === 'public' ? '🌍' : post.visibility === 'private' ? '🔒' : '👥'}
-                                </span>
+                                <select
+                                    className="visibility-mini-select"
+                                    value={post.visibility || 'friends'}
+                                    onChange={(e) => handleUpdateVisibility(post, e.target.value)}
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <option value="public">🌍</option>
+                                    <option value="friends">👥</option>
+                                    <option value="private">🔒</option>
+                                </select>
                             )}
                         </span>
                     </div>
@@ -337,9 +358,16 @@ export default function Feed({ onViewDetail }) {
                         <span className="post-time">
                             {statusInfo.label} · {timeAgo(item.createdAt)}
                             {item.userId === user?.uid && (
-                                <span style={{ marginLeft: 6, fontSize: '0.8rem', opacity: 0.6 }}>
-                                    {item.visibility === 'public' ? '🌍' : item.visibility === 'private' ? '🔒' : '👥'}
-                                </span>
+                                <select
+                                    className="visibility-mini-select"
+                                    value={item.visibility || 'friends'}
+                                    onChange={(e) => handleUpdateVisibility(item, e.target.value)}
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <option value="public">🌍</option>
+                                    <option value="friends">👥</option>
+                                    <option value="private">🔒</option>
+                                </select>
                             )}
                         </span>
                     </div>

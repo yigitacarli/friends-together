@@ -116,3 +116,8 @@ export async function votePost(postId, userId, voteType, userName, userAvatar) {
 export async function deletePost(postId) {
     await deleteDoc(doc(db, POSTS_COLLECTION, postId));
 }
+
+export async function updatePostVisibility(postId, visibility) {
+    const postRef = doc(db, POSTS_COLLECTION, postId);
+    await updateDoc(postRef, { visibility });
+}

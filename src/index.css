@@ -165,6 +165,33 @@ textarea {
   min-height: 100px;
 }
 
+.visibility-mini-select {
+  background: transparent;
+  border: none;
+  padding: 0 16px 0 0;
+  margin-left: 6px;
+  width: auto;
+  min-width: 28px;
+  height: 18px;
+  font-size: 0.8rem;
+  opacity: 0.6;
+  cursor: pointer;
+  box-shadow: none;
+  background-position: right 2px center;
+  background-size: 8px;
+}
+
+.visibility-mini-select:hover {
+  opacity: 1;
+  border: none;
+  box-shadow: none;
+}
+
+.visibility-mini-select:focus {
+  border: none;
+  box-shadow: none;
+}
+
 ::-webkit-scrollbar {
   width: 6px;
 }
