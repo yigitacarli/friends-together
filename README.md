@@ -25,41 +25,6 @@
 *   **Rol Yönetimi:** Yöneticiler (Admin) özel yetkilere sahiptir.
 *   **İçerik Gizliliği:** Arkadaşın olmayanlar senin profiline yorum yapamaz.
 
----
-
-## 🚀 Kurulum (Geliştirici)
-
-Projeyi yerel ortamda çalıştırmak için:
-
-1.  **Repoyu Klonla:**
-    ```bash
-    git clone https://github.com/yigitacarli/friends-together.git
-    cd friends-together
-    ```
-
-2.  **Bağımlılıkları Yükle:**
-    ```bash
-    npm install
-    # veya
-    pnpm install
-    ```
-
-3.  **Çevresel Değişkenler (.env):**
-    Proje kök dizininde `.env` dosyası oluştur ve Firebase yapılandırma bilgilerini gir:
-    ```env
-    VITE_FIREBASE_API_KEY=YOUR_API_KEY
-    VITE_FIREBASE_AUTH_DOMAIN=YOUR_AUTH_DOMAIN
-    VITE_FIREBASE_PROJECT_ID=YOUR_PROJECT_ID
-    ...
-    ```
-
-4.  **Başlat:**
-    ```bash
-    npm run dev
-    ```
-
----
-
 ## 🛠️ Teknolojiler
 
 *   **Frontend:** React, Vite
