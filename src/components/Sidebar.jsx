@@ -12,11 +12,8 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onEditProfile
         getAllUsers().then(setUsers);
     }, [items, user]); // reload users if items change (active status maybe?)
 
-    const otherUsers = users.filter(u => {
-        if (u.id === user?.uid) return false;
-        const myData = getUser(user?.uid);
-        return myData?.friends?.includes(u.id);
-    });
+    const members = users.filter(u => u.id !== user?.uid);
+    const myFriends = profile?.friends || [];
     const myCount = isLoggedIn ? items.filter(i => i.userId === user?.uid).length : 0;
 
     return (
@@ -99,13 +96,14 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onEditProfile
                     <span>İstatistikler</span>
                 </div>
 
-                {otherUsers.length > 0 && (
+                {members.length > 0 && (
                     <>
                         <div className="sidebar-section-title" style={{ marginTop: 12 }}>
-                            Arkadaşlar ({otherUsers.length})
+                            Üyeler ({members.length})
                         </div>
-                        {otherUsers.map(u => {
+                        {members.map(u => {
                             const online = isOnline(u.id);
+                            const isFriend = myFriends.includes(u.id);
                             return (
                                 <div
                                     key={u.id}
@@ -116,17 +114,28 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onEditProfile
                                         <span className="sidebar-link-icon">{u.avatar || '🧑‍💻'}</span>
                                         <span style={{
                                             position: 'absolute',
-                                            bottom: 0,
-                                            right: 0,
+                                            bottom: -2,
+                                            right: -2,
                                             width: 10,
                                             height: 10,
                                             borderRadius: '50%',
-                                            background: online ? '#34d399' : '#d1d5db',
-                                            border: '2px solid var(--bg-card)',
-                                            display: 'block'
-                                        }} />
+                                            background: online ? '#34d399' : '#6b7280',
+                                            border: '2px solid var(--bg-secondary)',
+                                            zIndex: 2
+                                        }} title={online ? 'Çevrimiçi' : 'Çevrimdışı'} />
                                     </div>
-                                    <span>{u.displayName}</span>
+                                    <span style={{
+                                        flex: 1,
+                                        whiteSpace: 'nowrap',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        color: isFriend ? 'var(--text-primary)' : 'var(--text-secondary)'
+                                    }}>
+                                        {u.displayName}
+                                    </span>
+                                    {isFriend && (
+                                        <span style={{ fontSize: '0.8rem', opacity: 0.8 }} title="Arkadaşınız">🤝</span>
+                                    )}
                                 </div>
                             );
                         })}
