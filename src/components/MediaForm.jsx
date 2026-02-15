@@ -117,49 +117,7 @@ export default function MediaForm({ item, onSave, onClose, saving }) {
                 </div>
                 <form onSubmit={handleSubmit}>
                     <div className="modal-body">
-                        <div className="form-group">
-                            <label className="form-label">Başlık *</label>
-                            <input
-                                type="text"
-                                value={form.title}
-                                onChange={(e) => handleChange('title', e.target.value)}
-                                placeholder="Medya adı..."
-                                required
-                                autoFocus
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label className="form-label">
-                                {form.type === 'book'
-                                    ? 'Kitap arama (isim veya link)'
-                                    : 'Film/Dizi arama (IMDb linki veya baslik)'}
-                            </label>
-                            <div className="autofill-row">
-                                <input
-                                    type="text"
-                                    value={lookupValue}
-                                    onChange={(e) => setLookupValue(e.target.value)}
-                                    placeholder={form.type === 'book'
-                                        ? 'Orn: Sefiller'
-                                        : 'Orn: https://www.imdb.com/title/tt0111161/'}
-                                />
-                                <button
-                                    type="button"
-                                    className="btn btn-secondary"
-                                    onClick={handleAutoFill}
-                                    disabled={lookupLoading}
-                                >
-                                    {lookupLoading ? 'Cekiliyor...' : 'Otomatik Doldur'}
-                                </button>
-                            </div>
-                            {form.type !== 'book' && (
-                                <p className="form-help">
-                                    IMDb verisi icin OMDb anahtari gerekir: <code>VITE_OMDB_API_KEY</code>
-                                </p>
-                            )}
-                        </div>
-
+                        {/* 1) Önce tür ve durum seç */}
                         <div className="form-row">
                             <div className="form-group">
                                 <label className="form-label">Tür</label>
@@ -183,6 +141,55 @@ export default function MediaForm({ item, onSave, onClose, saving }) {
                                     ))}
                                 </select>
                             </div>
+                        </div>
+
+                        {/* 2) Otomatik doldur — sadece kitap, film, dizi, anime için göster */}
+                        {['book', 'movie', 'series', 'anime'].includes(form.type) && (
+                            <div className="form-group" style={{ background: 'var(--bg-glass)', padding: 14, borderRadius: 'var(--radius-md)', border: '1px dashed var(--border-accent)' }}>
+                                <label className="form-label" style={{ color: 'var(--accent-secondary)' }}>
+                                    🔍 {form.type === 'book'
+                                        ? 'Kitap Ara (Open Library)'
+                                        : 'Film/Dizi Ara (OMDb)'}
+                                </label>
+                                <div className="autofill-row">
+                                    <input
+                                        type="text"
+                                        value={lookupValue}
+                                        onChange={(e) => setLookupValue(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAutoFill())}
+                                        placeholder={form.type === 'book'
+                                            ? 'Kitap adı yazın... (ör: Suç ve Ceza)'
+                                            : 'Film/dizi adı veya IMDb linki (ör: Inception)'}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="btn btn-primary"
+                                        onClick={handleAutoFill}
+                                        disabled={lookupLoading}
+                                        style={{ minWidth: 130 }}
+                                    >
+                                        {lookupLoading ? '⏳ Aranıyor...' : '🔍 Ara ve Doldur'}
+                                    </button>
+                                </div>
+                                <p className="form-help" style={{ marginTop: 6 }}>
+                                    {form.type === 'book'
+                                        ? 'Open Library üzerinden kitap bilgisi, yazar ve kapak otomatik doldurulur.'
+                                        : 'OMDb üzerinden başlık, yönetmen, kapak, tür ve özet otomatik doldurulur.'}
+                                </p>
+                            </div>
+                        )}
+
+                        {/* 3) Başlık */}
+                        <div className="form-group">
+                            <label className="form-label">Başlık *</label>
+                            <input
+                                type="text"
+                                value={form.title}
+                                onChange={(e) => handleChange('title', e.target.value)}
+                                placeholder="Medya adı..."
+                                required
+                                autoFocus
+                            />
                         </div>
 
                         {/* Category-specific extra fields */}
