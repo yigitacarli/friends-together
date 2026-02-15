@@ -8,7 +8,8 @@ import {
     acceptFriendRequest,
     removeFriend,
     getFriendStatus,
-    removeFriendRequest
+    removeFriendRequest,
+    cancelFriendRequest
 } from '../services/friends';
 
 export default function UserProfile({ userId, userName, userAvatar, onViewDetail }) {
@@ -76,6 +77,18 @@ export default function UserProfile({ userId, userName, userAvatar, onViewDetail
         try { await removeFriend(user.uid, userId); } catch (e) { console.error(e); }
     };
 
+    const handleCancelRequest = async () => {
+        if (loadingAction) return;
+        if (!window.confirm('İsteği iptal etmek istiyor musun?')) return;
+        setLoadingAction(true);
+        try {
+            await cancelFriendRequest(user.uid, userId);
+        } catch (e) {
+            console.error(e);
+            alert('İptal edilemedi.');
+        } finally { setLoadingAction(false); }
+    };
+
     return (
         <div className="user-profile-page">
             <div className="user-profile-hero">
@@ -91,13 +104,23 @@ export default function UserProfile({ userId, userName, userAvatar, onViewDetail
                 {!isMe && user && (
                     <div style={{ marginTop: 16 }}>
                         {friendStatus === 'none' && (
-                            <button className="btn btn-primary" onClick={handleSendRequest} disabled={loadingAction}>
+                            <button
+                                className="btn"
+                                onClick={handleSendRequest}
+                                disabled={loadingAction}
+                                style={{ background: '#16a34a', color: 'white', padding: '8px 24px', fontWeight: 600, boxShadow: '0 4px 12px rgba(22, 163, 74, 0.3)' }}
+                            >
                                 ➕ Arkadaş Ekle
                             </button>
                         )}
                         {friendStatus === 'sent' && (
-                            <button className="btn btn-secondary" disabled>
-                                ⏳ İstek Gönderildi
+                            <button
+                                className="btn"
+                                onClick={handleCancelRequest}
+                                disabled={loadingAction}
+                                style={{ background: '#dc2626', color: 'white', padding: '8px 24px', fontWeight: 600 }}
+                            >
+                                ✕ İptal Et
                             </button>
                         )}
                         {friendStatus === 'friends' && (
