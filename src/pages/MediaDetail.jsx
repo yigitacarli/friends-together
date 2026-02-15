@@ -79,6 +79,20 @@ export default function MediaDetail({ mediaId, onBack, onEdit, onDelete, current
     const isOwner = currentUserId && item.userId === currentUserId;
     const canEdit = isOwner || isAdmin;
 
+    // Private içerik kontrolü — sadece sahibi görebilir
+    if (item.visibility === 'private' && !isOwner) {
+        return (
+            <div className="detail-page">
+                <button className="btn-icon back-btn" onClick={onBack} style={{ marginBottom: 16 }}>⬅ Geri</button>
+                <div className="empty-state">
+                    <div className="empty-state-icon">🔒</div>
+                    <h3 className="empty-state-title">Bu içerik gizli</h3>
+                    <p className="empty-state-text">Bu içerik sadece sahibi tarafından görüntülenebilir.</p>
+                </div>
+            </div>
+        );
+    }
+
     // Use owner profile if loaded, fallback to item data
     const displayAvatar = ownerProfile?.avatar || item.userAvatar || '🧑‍💻';
     const displayName = ownerProfile?.displayName || item.userName || 'Kullanıcı';

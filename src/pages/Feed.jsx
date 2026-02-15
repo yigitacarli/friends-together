@@ -76,14 +76,12 @@ export default function Feed({ onViewDetail }) {
             // Legacy items or items with no visibility default to 'friends'
             const visibility = item.visibility || 'friends';
 
+            // Private = sadece sahibi görür (admin bile göremez)
+            if (visibility === 'private') return false;
+
             if (visibility === 'public') return true;
             if (visibility === 'friends') {
-                return myFriends.includes(item.userId) || isAdmin;
-            }
-            if (visibility === 'private') {
-                return isAdmin; // Admin can see private for safety/audit? No, usually private is private. But user asked for "only me".
-                // Actually, in many apps Admin can see everything, but let's stick to true private unless user asked otherwise.
-                // However, user said "only the poster sees it", which usually excludes admin unless they are the poster.
+                return myFriends.includes(item.userId);
             }
             return false;
         };

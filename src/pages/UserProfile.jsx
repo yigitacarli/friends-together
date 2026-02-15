@@ -37,15 +37,18 @@ export default function UserProfile({ userId, userName, userAvatar, onViewDetail
 
     const userItems = useMemo(() => {
         const rawItems = getByUser(userId);
-        if (isMe || isAdmin) return rawItems;
+        // Kendi profilim — hepsini gör (private dahil)
+        if (isMe) return rawItems;
 
+        // Başkasının profili — private olanları HİÇ gösterme (admin bile)
         return rawItems.filter(item => {
             const visibility = item.visibility || 'friends';
+            if (visibility === 'private') return false;
             if (visibility === 'public') return true;
             if (visibility === 'friends') return friendStatus === 'friends';
-            return false; // private
+            return false;
         });
-    }, [items, userId, getByUser, isMe, friendStatus, isAdmin]);
+    }, [items, userId, getByUser, isMe, friendStatus]);
 
     const counts = useMemo(() => {
         const c = { total: userItems.length };

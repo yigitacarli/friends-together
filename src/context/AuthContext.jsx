@@ -63,14 +63,22 @@ export function AuthProvider({ children }) {
         return () => clearInterval(interval);
     }, [user]);
 
+    // Realtime profile listener — keeps profile in sync with Firestore changes
+    // (friend requests, avatar/title edits by others, etc.)
     useEffect(() => {
+        let unsubProfile = null;
+
         const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
+            // Unsubscribe from previous profile listener
+            if (unsubProfile) { unsubProfile(); unsubProfile = null; }
+
             if (firebaseUser) {
                 setUser(firebaseUser);
+
+                // First check if profile exists
                 const profileSnap = await getDoc(doc(db, 'users', firebaseUser.uid));
-                if (profileSnap.exists()) {
-                    setProfile({ id: firebaseUser.uid, ...profileSnap.data() });
-                } else {
+                if (!profileSnap.exists()) {
+                    // Create profile ONCE for new users (merge: true as safety)
                     const newProfile = {
                         displayName: firebaseUser.displayName || 'Kullanıcı',
                         email: firebaseUser.email,
@@ -80,16 +88,26 @@ export function AuthProvider({ children }) {
                         friendRequests: [],
                         createdAt: new Date().toISOString(),
                     };
-                    await setDoc(doc(db, 'users', firebaseUser.uid), newProfile);
-                    setProfile({ id: firebaseUser.uid, ...newProfile });
+                    await setDoc(doc(db, 'users', firebaseUser.uid), newProfile, { merge: true });
                 }
+
+                // Now listen to profile changes in real-time
+                unsubProfile = onSnapshot(doc(db, 'users', firebaseUser.uid), (snap) => {
+                    if (snap.exists()) {
+                        setProfile({ id: firebaseUser.uid, ...snap.data() });
+                    }
+                });
             } else {
                 setUser(null);
                 setProfile(null);
             }
             setLoading(false);
         });
-        return unsub;
+
+        return () => {
+            unsub();
+            if (unsubProfile) unsubProfile();
+        };
     }, []);
 
     const login = useCallback(async (email, password) => {
