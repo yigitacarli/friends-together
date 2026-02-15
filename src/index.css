@@ -2647,3 +2647,129 @@ textarea {
 .comment-preview:hover {
   background: var(--bg-glass-hover);
 }
+
+/* --- RESPONSIVE FIXES --- */
+
+/* Sidebar Overlay */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 95;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.sidebar-overlay.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+@media (max-width: 1024px) {
+  :root {
+    --sidebar-width: 240px;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: 280px;
+    --header-height: 60px;
+  }
+
+  .main-area {
+    margin-left: 0;
+  }
+
+  .header {
+    left: 0;
+    padding: 0 16px;
+  }
+
+  .sidebar {
+    transform: translateX(-100%);
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .mobile-menu-btn {
+    display: flex !important;
+  }
+
+  .page-content {
+    padding: 20px 16px;
+  }
+
+  .media-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+  }
+
+  .media-card-cover {
+    height: 220px;
+  }
+
+  .activity-body {
+    flex-direction: column;
+  }
+
+  .activity-cover,
+  .activity-cover-placeholder {
+    width: 100%;
+    height: 200px;
+  }
+
+  .dashboard-greeting h2 {
+    font-size: 1.4rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .media-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .media-card-cover {
+    height: 300px;
+  }
+
+  .collection-tabs {
+    justify-content: center;
+  }
+
+  .btn {
+    padding: 8px 12px;
+  }
+
+  .user-profile-avatar {
+    font-size: 3rem;
+  }
+
+  .user-profile-name {
+    font-size: 1.3rem;
+  }
+
+  .user-profile-stats {
+    gap: 12px;
+  }
+}
+
+/* Fix for horizontal scroll on mobile */
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}

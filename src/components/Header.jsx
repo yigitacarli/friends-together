@@ -7,7 +7,7 @@ export default function Header({ searchQuery, onSearchChange, onAddClick, onMenu
     return (
         <header className="header">
             <div className="header-left">
-                <button className="btn-icon mobile-menu-btn" onClick={onMenuToggle} style={{ display: 'none' }}>
+                <button className="btn-icon mobile-menu-btn" onClick={onMenuToggle}>
                     ☰
                 </button>
             </div>
