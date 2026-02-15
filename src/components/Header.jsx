@@ -23,11 +23,11 @@ export default function Header({ searchQuery, onSearchChange, onAddClick, onMenu
                             <span className="hide-mobile">Yeni Ekle</span>
                         </button>
                         <button
-                            className="btn"
+                            className="btn logout-btn"
                             onClick={logout}
                             title="Çıkış Yap"
-                            style={{ background: '#991b1b', color: 'white', border: 'none', padding: '8px 16px' }}
                         >
+                            <span>🚪</span>
                             <span className="hide-mobile">Çıkış Yap</span>
                         </button>
                     </>
