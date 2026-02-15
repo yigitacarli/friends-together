@@ -9,7 +9,7 @@ function getChatTime(timestamp) {
 }
 
 export default function Lobby() {
-    const { user, profile } = useAuth();
+    const { user, profile, getUser } = useAuth();
     const [messages, setMessages] = useState([]);
     const [text, setText] = useState('');
     const bottomRef = useRef(null);
@@ -49,11 +49,21 @@ export default function Lobby() {
                 <div className="chat-messages">
                     {messages.map(msg => {
                         const isMe = msg.userId === user?.uid;
+                        const author = getUser(msg.userId);
+                        const displayName = author?.displayName || msg.userName || 'Anonim';
+                        const avatar = author?.avatar || msg.userAvatar || '🧑‍💻';
+                        const title = author?.title;
+
                         return (
                             <div key={msg.id} className={`chat-message ${isMe ? 'mine' : ''}`}>
-                                {!isMe && <span className="chat-avatar" title={msg.userName}>{msg.userAvatar || '🧑‍💻'}</span>}
+                                {!isMe && <span className="chat-avatar" title={displayName}>{avatar}</span>}
                                 <div className="chat-bubble">
-                                    {!isMe && <div className="chat-author">{msg.userName}</div>}
+                                    {!isMe && (
+                                        <div className="chat-author">
+                                            {displayName}
+                                            {title && <span style={{ fontSize: '0.6rem', fontWeight: 400, color: 'var(--text-muted)', marginLeft: 4 }}>({title})</span>}
+                                        </div>
+                                    )}
                                     <div className="chat-text">{msg.text}</div>
                                     <div className="chat-time">{getChatTime(msg.createdAt)}</div>
                                 </div>

@@ -25,7 +25,7 @@ function getTimestamp(item) {
 }
 
 export default function Feed({ onViewDetail }) {
-    const { user, profile, isLoggedIn, isAdmin } = useAuth();
+    const { user, profile, isLoggedIn, isAdmin, getUser } = useAuth();
     const { items: mediaItems } = useMedia();
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -128,12 +128,20 @@ export default function Feed({ onViewDetail }) {
         const comments = commentsByPost[post.id] || [];
         const isExpanded = expandedComments[post.id];
 
+        const author = getUser(post.userId);
+        const displayName = author?.displayName || post.userName;
+        const avatar = author?.avatar || post.userAvatar || '🧑‍💻';
+        const title = author?.title || 'Çaylak Üye';
+
         return (
             <div key={`post-${post.id}`} className="post-card">
                 <div className="post-header">
-                    <span className="feed-avatar">{post.userAvatar || '🧑‍💻'}</span>
+                    <span className="feed-avatar">{avatar}</span>
                     <div className="post-header-info">
-                        <span className="post-author">{post.userName}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span className="post-author">{displayName}</span>
+                            <span className="user-profile-title-badge" style={{ fontSize: '0.6rem', padding: '2px 6px' }}>{title}</span>
+                        </div>
                         <span className="post-time">{timeAgo(post.createdAt)}</span>
                     </div>
                     <span className="post-type-badge" style={{ color: typeInfo.color, borderColor: typeInfo.color }}>
@@ -158,21 +166,27 @@ export default function Feed({ onViewDetail }) {
                 {/* Comments */}
                 {isExpanded && (
                     <div className="comments-section">
-                        {comments.map(c => (
-                            <div key={c.id} className="comment-item">
-                                <span className="comment-avatar">{c.userAvatar || '🧑‍💻'}</span>
-                                <div className="comment-body">
-                                    <div className="comment-header">
-                                        <span className="comment-author">{c.userName}</span>
-                                        <span className="comment-time">{timeAgo(c.createdAt)}</span>
-                                        {user && (c.userId === user.uid || isAdmin) && (
-                                            <button className="comment-delete" onClick={() => handleDeleteComment(post.id, c.id)}>✕</button>
-                                        )}
+                        {comments.map(c => {
+                            const cAuthor = getUser(c.userId);
+                            return (
+                                <div key={c.id} className="comment-item">
+                                    <span className="comment-avatar">{cAuthor?.avatar || c.userAvatar || '🧑‍💻'}</span>
+                                    <div className="comment-body">
+                                        <div className="comment-header">
+                                            <span className="comment-author">{cAuthor?.displayName || c.userName}</span>
+                                            <span className="user-profile-title-badge" style={{ fontSize: '0.55rem', padding: '1px 4px', marginRight: 6 }}>
+                                                {cAuthor?.title || 'Çaylak Üye'}
+                                            </span>
+                                            <span className="comment-time">{timeAgo(c.createdAt)}</span>
+                                            {user && (c.userId === user.uid || isAdmin) && (
+                                                <button className="comment-delete" onClick={() => handleDeleteComment(post.id, c.id)}>✕</button>
+                                            )}
+                                        </div>
+                                        <div className="comment-text">{c.content}</div>
                                     </div>
-                                    <div className="comment-text">{c.content}</div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                         {isLoggedIn && (
                             <div className="comment-input-row">
                                 <input
@@ -196,12 +210,20 @@ export default function Feed({ onViewDetail }) {
         const typeInfo = MEDIA_TYPES[item.type] || MEDIA_TYPES.movie;
         const statusInfo = STATUS_TYPES[item.status] || STATUS_TYPES.completed;
 
+        const author = getUser(item.userId);
+        const displayName = author?.displayName || item.userName || 'Bilinmeyen';
+        const avatar = author?.avatar || '🧑‍💻'; // activity items don't store avatar usually, fallback needed
+        const title = author?.title || 'Çaylak Üye';
+
         return (
             <div key={`media-${item.id}`} className="activity-card" onClick={() => onViewDetail?.(item.id)}>
                 <div className="post-header">
                     <span className="feed-avatar" style={{ fontSize: '1.5rem' }}>{typeInfo.icon}</span>
                     <div className="post-header-info">
-                        <span className="post-author">{item.userName || 'Bilinmeyen'}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span className="post-author">{displayName}</span>
+                            <span className="user-profile-title-badge" style={{ fontSize: '0.6rem', padding: '2px 6px' }}>{title}</span>
+                        </div>
                         <span className="post-time">
                             {statusInfo.label} · {timeAgo(item.createdAt)}
                         </span>

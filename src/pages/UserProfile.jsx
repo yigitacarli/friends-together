@@ -67,12 +67,6 @@ export default function UserProfile({ userId, userName, userAvatar, onViewDetail
                     {currentProfile?.title || 'Çaylak Üye'}
                 </div>
 
-                {isMe && (
-                    <button className="btn btn-secondary btn-sm" style={{ marginTop: 12 }} onClick={handleEditOpen}>
-                        ✏️ Profili Düzenle
-                    </button>
-                )}
-
                 <div className="user-profile-stats" style={{ marginTop: 24 }}>
                     <div className="user-profile-stat">
                         <span className="user-profile-stat-value">{counts.total}</span>

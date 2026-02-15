@@ -8,7 +8,7 @@ import {
     signOut,
     updateProfile,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, collection, onSnapshot } from 'firebase/firestore';
 
 const AuthContext = createContext(null);
 
@@ -33,6 +33,17 @@ export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [allUsers, setAllUsers] = useState({});
+
+    // Listen to all users for realtime updates
+    useEffect(() => {
+        const unsub = onSnapshot(collection(db, 'users'), (snap) => {
+            const usersMap = {};
+            snap.docs.forEach(d => { usersMap[d.id] = d.data(); });
+            setAllUsers(usersMap);
+        });
+        return unsub;
+    }, []);
 
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -110,6 +121,8 @@ export function AuthProvider({ children }) {
             logout,
             resetPassword,
             updateUserProfile,
+            getUser: (uid) => allUsers[uid] || null,
+            allUsers,
             AVATARS,
             FUNNY_TITLES,
         }}>
