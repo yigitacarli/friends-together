@@ -110,7 +110,7 @@ export default function UserProfile({ userId, userName, userAvatar, onViewDetail
                                 disabled={loadingAction}
                                 style={{ background: '#16a34a', color: 'white', padding: '8px 24px', fontWeight: 600, boxShadow: '0 4px 12px rgba(22, 163, 74, 0.3)' }}
                             >
-                                ➕ Arkadaş Ekle
+                                Arkadaş Ekle
                             </button>
                         )}
                         {friendStatus === 'sent' && (

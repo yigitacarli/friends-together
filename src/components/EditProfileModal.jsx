@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 export default function EditProfileModal({ onClose }) {
@@ -14,14 +14,13 @@ export default function EditProfileModal({ onClose }) {
         : FUNNY_TITLES;
 
     const handleSave = async () => {
-        // ... (unchanged handleSave body start)
         if (!editName.trim()) return;
         setSaving(true);
         try {
             await updateUserProfile({
                 displayName: editName.trim(),
                 avatar: editAvatar,
-                title: editTitle.trim()
+                title: editTitle
             });
             onClose();
         } catch (err) {
@@ -34,24 +33,56 @@ export default function EditProfileModal({ onClose }) {
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            {/* ... modal content ... */}
             <div className="modal" onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
-                    {/* ... */}
+                    <h3>Profili Düzenle</h3>
+                    <button className="btn-icon" onClick={onClose}>✕</button>
+                </div>
+                <div className="modal-body">
                     <div className="form-group">
-                        <label className="form-label">Ünvan (Title)</label>
+                        <label className="form-label">Avatar Seç</label>
+                        <div className="avatar-picker" style={{ maxHeight: 150, overflowY: 'auto' }}>
+                            {AVATARS.map(av => (
+                                <button key={av} type="button"
+                                    className={`avatar-option ${editAvatar === av ? 'selected' : ''}`}
+                                    onClick={() => setEditAvatar(av)}
+                                >
+                                    {av}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="form-group">
+                        <label className="form-label">Görünen İsim</label>
                         <input
                             type="text"
+                            value={editName}
+                            onChange={e => setEditName(e.target.value)}
+                            placeholder="Adın..."
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label className="form-label">Ünvan (Title)</label>
+                        <select
                             value={editTitle}
                             onChange={e => setEditTitle(e.target.value)}
-                            placeholder="Kendine bir ünvan seç..."
-                            list="titles-list"
-                        />
-                        <datalist id="titles-list">
-                            {availableTitles.map(t => <option key={t} value={t} />)}
-                        </datalist>
+                            style={{
+                                width: '100%',
+                                padding: '10px',
+                                borderRadius: '8px',
+                                border: '1px solid var(--border)',
+                                background: 'var(--bg-secondary)',
+                                color: 'var(--text-primary)',
+                                fontSize: '1rem'
+                            }}
+                        >
+                            {availableTitles.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
                         <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
-                            Listedeki komik ünvanlardan seç veya kendi havalı ünvanını yaz!
+                            Kendine yakışan bir ünvan seç!
                         </p>
                     </div>
                 </div>
