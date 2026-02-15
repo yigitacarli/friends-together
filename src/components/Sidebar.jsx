@@ -77,6 +77,17 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onEditProfile
                     <span>Meydan (Chat)</span>
                 </div>
 
+                {profile?.nsfwAccess && (
+                    <div
+                        className={`sidebar-link ${currentPage === 'nsfw-lobby' ? 'active' : ''}`}
+                        onClick={() => onNavigate('nsfw-lobby')}
+                        style={{ color: '#f87171' }}
+                    >
+                        <span className="sidebar-link-icon">🔞</span>
+                        <span style={{ fontWeight: 600 }}>+18 Sohbet</span>
+                    </div>
+                )}
+
                 {isLoggedIn && (
                     <div
                         className={`sidebar-link ${currentPage === 'my-profile' ? 'active' : ''}`}

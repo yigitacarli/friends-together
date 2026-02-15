@@ -81,10 +81,20 @@ export default function AdminPanel({ onNavigate }) {
         } catch (e) { console.error(e); }
     };
 
+    const handleToggleNsfw = async (uid, currentValue) => {
+        try {
+            await updateDoc(doc(db, 'users', uid), { nsfwAccess: !currentValue });
+        } catch (e) {
+            console.error(e);
+            alert('+18 erişim güncellenemedi.');
+        }
+    };
+
     const tabs = [
         { id: 'overview', label: '📊 Genel Bakış', icon: '📊' },
         { id: 'users', label: '👥 Kullanıcılar', icon: '👥' },
         { id: 'content', label: '📝 İçerikler', icon: '📝' },
+        { id: 'nsfw', label: '🔞 +18 Erişim', icon: '🔞' },
     ];
 
     return (
@@ -299,7 +309,51 @@ export default function AdminPanel({ onNavigate }) {
                     })}
                 </div>
             )}
+
+            {/* NSFW ACCESS TAB */}
+            {tab === 'nsfw' && (
+                <div className="admin-content animate-fade-in">
+                    <div className="admin-section-card" style={{ marginBottom: 16 }}>
+                        <h3 className="admin-section-title">🔞 +18 Sohbet Erişim Yönetimi</h3>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: 4, marginBottom: 16 }}>
+                            Aşağıdaki kullanıcılardan istediğini seç. Sadece seçili kişiler menüde "+18 Sohbet" bölümünü görebilir.
+                        </p>
+
+                        <div className="admin-search-bar" style={{ marginBottom: 16 }}>
+                            <input
+                                type="text"
+                                placeholder="🔍 Kullanıcı ara..."
+                                value={searchUser}
+                                onChange={(e) => setSearchUser(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="admin-nsfw-list">
+                            {filteredUsers.map(u => {
+                                const hasAccess = u.nsfwAccess === true;
+                                return (
+                                    <div key={u.uid} className={`admin-nsfw-item ${hasAccess ? 'active' : ''}`}>
+                                        <div className="admin-nsfw-item-info">
+                                            <span className="admin-user-card-avatar">{u.avatar || '🧑‍💻'}</span>
+                                            <div>
+                                                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{u.displayName}</div>
+                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{u.email}</div>
+                                            </div>
+                                        </div>
+                                        <button
+                                            className={`admin-nsfw-toggle ${hasAccess ? 'on' : 'off'}`}
+                                            onClick={() => handleToggleNsfw(u.uid, hasAccess)}
+                                            title={hasAccess ? 'Erişimi Kaldır' : 'Erişim Ver'}
+                                        >
+                                            <span className="admin-nsfw-toggle-knob" />
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
-

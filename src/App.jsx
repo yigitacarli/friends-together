@@ -18,6 +18,7 @@ const UserProfile = lazy(() => import('./pages/UserProfile'));
 const Login = lazy(() => import('./pages/Login'));
 const Community = lazy(() => import('./pages/Community'));
 const AdminPanel = lazy(() => import('./pages/AdminPanel'));
+const NsfwLobby = lazy(() => import('./pages/NsfwLobby'));
 
 const LoadingSpinner = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh', color: 'var(--text-muted)' }}>
@@ -155,6 +156,7 @@ export default function App() {
     if (page === 'feed') return <Feed onViewDetail={viewDetail} onNavigate={navigate} />;
     if (page === 'events') return <Events />;
     if (page === 'lobby') return <Lobby />;
+    if (page === 'nsfw-lobby' && profile?.nsfwAccess) return <NsfwLobby />;
     if (page === 'stats') return <Stats />;
     if (page === 'community') return <Community onNavigate={navigate} />;
     if (page === 'dashboard') return <Dashboard onNavigate={navigate} onViewDetail={viewDetail} />;
