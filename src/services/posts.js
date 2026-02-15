@@ -91,8 +91,9 @@ export async function votePost(postId, userId, voteType, userName, userAvatar) {
                 downvotes: arrayRemove(userId)
             });
 
-            // Bildirim gönder (hata olursa sessizce devam et)
-            if (postData.userId !== userId) {
+            // Bildirim gönder
+            if (postData.userId && postData.userId !== userId) {
+                console.log('[Vote] Bildirim gönderiliyor. Post sahibi:', postData.userId, 'Beğenen:', userId);
                 try {
                     await sendNotification(postData.userId, 'like', {
                         postId,
@@ -101,8 +102,10 @@ export async function votePost(postId, userId, voteType, userName, userAvatar) {
                         userAvatar: userAvatar || '🧑‍💻'
                     });
                 } catch (notifErr) {
-                    console.error('Vote notification error:', notifErr);
+                    console.error('[Vote] Bildirim hatası:', notifErr);
                 }
+            } else {
+                console.log('[Vote] Bildirim atlandı. postData.userId:', postData.userId, 'userId:', userId);
             }
         }
     } else if (voteType === 'down') {

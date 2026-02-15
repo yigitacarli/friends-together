@@ -36,27 +36,31 @@ export async function addComment(parentId, content, userId, userName, userAvatar
     };
     const docRef = await addDoc(getCommentsRef(parentId, parentCollection), comment);
 
-    // Notify owner
+    // Bildirim gönder (yorum sahibine)
     try {
         const parentRef = doc(db, parentCollection, parentId);
         const parentSnap = await getDoc(parentRef);
         if (parentSnap.exists()) {
             const parentData = parentSnap.data();
-            // Media items stored userId differently than posts? 
-            // Posts: userId. Media: userId. It's consistent.
-            if (parentData.userId !== userId) {
+            console.log('[Yorum] Parent bulundu. Sahibi:', parentData.userId, 'Yorum yapan:', userId);
+            if (parentData.userId && parentData.userId !== userId) {
+                console.log('[Yorum] Bildirim gönderiliyor:', parentData.userId);
                 await sendNotification(parentData.userId, 'comment', {
-                    postId: parentId, // keep key as postId for compatibility or change logic in notification display
+                    postId: parentId,
                     userId,
                     userName,
                     userAvatar: comment.userAvatar,
                     content: comment.content,
-                    isMedia: parentCollection === 'media-items' // flag for frontend
+                    isMedia: parentCollection === 'media-items'
                 });
+            } else {
+                console.log('[Yorum] Bildirim atlandı (kendi gönderisine yorum)');
             }
+        } else {
+            console.warn('[Yorum] Parent döküman bulunamadı:', parentCollection, parentId);
         }
     } catch (err) {
-        console.error('Notification error:', err);
+        console.error('[Yorum] Bildirim hatası:', err);
     }
 
     return { id: docRef.id, ...comment };
