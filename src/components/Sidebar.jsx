@@ -65,6 +65,14 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onEditProfile
                 </div>
 
                 <div
+                    className={`sidebar-link ${currentPage === 'community' ? 'active' : ''}`}
+                    onClick={() => onNavigate('community')}
+                >
+                    <span className="sidebar-link-icon">🌐</span>
+                    <span>Topluluk</span>
+                </div>
+
+                <div
                     className={`sidebar-link ${currentPage === 'lobby' ? 'active' : ''}`}
                     onClick={() => onNavigate('lobby')}
                 >

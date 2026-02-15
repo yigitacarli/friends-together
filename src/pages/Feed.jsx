@@ -182,7 +182,8 @@ export default function Feed({ onViewDetail }) {
         const author = getUser(post.userId);
         const displayName = author?.displayName || post.userName;
         const avatar = author?.avatar || post.userAvatar || '🧑‍💻';
-        const title = author?.title || 'Çaylak Üye';
+        const isAdminUser = author?.email === 'acarliyigit@gmail.com';
+        const title = isAdminUser ? '👑 Admin' : (author?.title || 'Çaylak Üye');
         const lastComment = comments.length > 0 ? comments[comments.length - 1] : null;
 
         return (
@@ -192,7 +193,7 @@ export default function Feed({ onViewDetail }) {
                     <div className="post-header-info">
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <span className="post-author">{displayName}</span>
-                            <span className="user-profile-title-badge" style={{ fontSize: '0.6rem', padding: '2px 6px', marginTop: 0 }}>{title}</span>
+                            <span className={`user-profile-title-badge ${isAdminUser ? 'admin-badge' : ''}`} style={{ fontSize: '0.6rem', padding: '2px 6px', marginTop: 0 }}>{title}</span>
                         </div>
                         <span className="post-time">{timeAgo(post.createdAt)}</span>
                     </div>
@@ -253,8 +254,8 @@ export default function Feed({ onViewDetail }) {
                                     <div className="comment-body">
                                         <div className="comment-header">
                                             <span className="comment-author">{cAuthor?.displayName || c.userName}</span>
-                                            <span className="user-profile-title-badge" style={{ fontSize: '0.55rem', padding: '1px 4px', marginRight: 6 }}>
-                                                {cAuthor?.title || 'Çaylak Üye'}
+                                            <span className={`user-profile-title-badge ${cAuthor?.email === 'acarliyigit@gmail.com' ? 'admin-badge' : ''}`} style={{ fontSize: '0.55rem', padding: '1px 4px', marginRight: 6 }}>
+                                                {cAuthor?.email === 'acarliyigit@gmail.com' ? '👑 Admin' : (cAuthor?.title || 'Çaylak Üye')}
                                             </span>
                                             <span className="comment-time">{timeAgo(c.createdAt)}</span>
                                             {user && (c.userId === user.uid || isAdmin) && (
@@ -291,7 +292,8 @@ export default function Feed({ onViewDetail }) {
         const author = getUser(item.userId);
         const displayName = author?.displayName || item.userName || 'Bilinmeyen';
         const avatar = author?.avatar || '🧑‍💻';
-        const title = author?.title || 'Çaylak Üye';
+        const isAdminUser = author?.email === 'acarliyigit@gmail.com';
+        const title = isAdminUser ? '👑 Admin' : (author?.title || 'Çaylak Üye');
 
         // Placeholder fix
         const coverUrl = item.coverUrl || 'https://placehold.co/400x600/2a2a2a/FFF?text=Görsel+Yok';
@@ -303,7 +305,7 @@ export default function Feed({ onViewDetail }) {
                     <div className="post-header-info">
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <span className="post-author">{displayName}</span>
-                            <span className="user-profile-title-badge" style={{ fontSize: '0.6rem', padding: '2px 6px', marginTop: 0 }}>{title}</span>
+                            <span className={`user-profile-title-badge ${isAdminUser ? 'admin-badge' : ''}`} style={{ fontSize: '0.6rem', padding: '2px 6px', marginTop: 0 }}>{title}</span>
                         </div>
                         <span className="post-time">
                             {statusInfo.label} · {timeAgo(item.createdAt)}

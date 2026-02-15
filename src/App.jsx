@@ -10,6 +10,7 @@ import Events from './pages/Events';
 import Lobby from './pages/Lobby'; // New
 import UserProfile from './pages/UserProfile';
 import Login from './pages/Login';
+import Community from './pages/Community'; // New page
 import EditProfileModal from './components/EditProfileModal'; // New
 import { useMedia } from './context/MediaContext';
 import { useAuth } from './context/AuthContext';
@@ -126,6 +127,7 @@ export default function App() {
     if (page === 'events') return <Events />;
     if (page === 'lobby') return <Lobby />;
     if (page === 'stats') return <Stats />;
+    if (page === 'community') return <Community />;
     if (page === 'dashboard') return <Dashboard onNavigate={navigate} onViewDetail={viewDetail} />;
 
     if (page === 'my-profile' && isLoggedIn) {

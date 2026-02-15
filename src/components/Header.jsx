@@ -10,15 +10,6 @@ export default function Header({ searchQuery, onSearchChange, onAddClick, onMenu
                 <button className="btn-icon mobile-menu-btn" onClick={onMenuToggle} style={{ display: 'none' }}>
                     ☰
                 </button>
-                <div className="header-search">
-                    <span className="header-search-icon">🔍</span>
-                    <input
-                        type="text"
-                        placeholder="Medya ara..."
-                        value={searchQuery}
-                        onChange={(e) => onSearchChange(e.target.value)}
-                    />
-                </div>
             </div>
 
             <div className="app-logo-text">Friends Together</div>
