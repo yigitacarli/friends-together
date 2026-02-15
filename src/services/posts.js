@@ -19,13 +19,14 @@ import {
 
 const POSTS_COLLECTION = 'posts';
 
-export async function addPost(content, type, userId, userName, userAvatar) {
+export async function addPost(content, type, userId, userName, userAvatar, visibility = 'friends') {
     const docRef = await addDoc(collection(db, POSTS_COLLECTION), {
         content,
         type,
         userId,
         userName,
         userAvatar: userAvatar || '🧑‍💻',
+        visibility,
         likes: [],
         upvotes: [],
         downvotes: [],

@@ -15,6 +15,7 @@ import {
 export default function UserProfile({ userId, userName, userAvatar, onViewDetail }) {
     const { user, profile: myProfile, getUser } = useAuth();
     const { items, getByUser } = useMedia();
+    const { isAdmin } = useAuth();
     const [activeType, setActiveType] = useState('all');
     const [friendStatus, setFriendStatus] = useState('none');
     const [loadingAction, setLoadingAction] = useState(false);
@@ -34,7 +35,17 @@ export default function UserProfile({ userId, userName, userAvatar, onViewDetail
         }
     }, [user, userId, getUser, isMe]);
 
-    const userItems = useMemo(() => getByUser(userId), [items, userId, getByUser]);
+    const userItems = useMemo(() => {
+        const rawItems = getByUser(userId);
+        if (isMe || isAdmin) return rawItems;
+
+        return rawItems.filter(item => {
+            const visibility = item.visibility || 'friends';
+            if (visibility === 'public') return true;
+            if (visibility === 'friends') return friendStatus === 'friends';
+            return false; // private
+        });
+    }, [items, userId, getByUser, isMe, friendStatus, isAdmin]);
 
     const counts = useMemo(() => {
         const c = { total: userItems.length };

@@ -19,6 +19,7 @@ const EMPTY_FORM = {
     artist: '',
     techStack: '',
     githubUrl: '',
+    visibility: 'friends', // public, friends, private
 };
 
 export default function MediaForm({ item, onSave, onClose, saving }) {
@@ -43,6 +44,7 @@ export default function MediaForm({ item, onSave, onClose, saving }) {
                 artist: item.artist || '',
                 techStack: item.techStack || '',
                 githubUrl: item.githubUrl || '',
+                visibility: item.visibility || 'friends',
             });
         }
     }, [item]);
@@ -163,6 +165,42 @@ export default function MediaForm({ item, onSave, onClose, saving }) {
                                 onChange={(e) => handleChange('tags', e.target.value)}
                                 placeholder="aksiyon, bilim kurgu, favoriler..."
                             />
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">Kimler Görebilir?</label>
+                            <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
+                                {[
+                                    { id: 'public', label: '🌍 Herkes', color: '#3b82f6' },
+                                    { id: 'friends', label: '👥 Arkadaşlar', color: '#22c55e' },
+                                    { id: 'private', label: '🔒 Sadece Ben', color: '#64748b' }
+                                ].map(opt => (
+                                    <label key={opt.id} style={{
+                                        display: 'flex', alignItems: 'center', gap: 6,
+                                        padding: '8px 12px', borderRadius: 8,
+                                        border: `1px solid ${form.visibility === opt.id ? opt.color : 'var(--border)'}`,
+                                        background: form.visibility === opt.id ? `${opt.color}15` : 'transparent',
+                                        cursor: 'pointer', flex: 1, justifyContent: 'center'
+                                    }}>
+                                        <input
+                                            type="radio"
+                                            name="visibility"
+                                            value={opt.id}
+                                            checked={form.visibility === opt.id}
+                                            onChange={() => handleChange('visibility', opt.id)}
+                                            style={{ accentColor: opt.color }}
+                                        />
+                                        <span style={{ fontWeight: 500, fontSize: '0.9rem', color: form.visibility === opt.id ? opt.color : 'inherit' }}>
+                                            {opt.label}
+                                        </span>
+                                    </label>
+                                ))}
+                            </div>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 8 }}>
+                                {form.visibility === 'public' && 'Topluluk sayfasında ve herkesin akışında görünebilir.'}
+                                {form.visibility === 'friends' && 'Sadece arkadaş listenizdekiler görebilir.'}
+                                {form.visibility === 'private' && 'Gizli günlük modunda, sadece siz görebilirsiniz.'}
+                            </p>
                         </div>
 
                         <div className="form-group">

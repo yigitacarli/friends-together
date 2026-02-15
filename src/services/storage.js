@@ -70,6 +70,7 @@ export async function addMedia(item, userId, userDisplayName) {
         artist: item.artist || '',
         techStack: item.techStack || '',
         githubUrl: item.githubUrl || '',
+        visibility: item.visibility || 'friends',
         userId: userId,
         userName: userDisplayName,
         createdAt: serverTimestamp(),

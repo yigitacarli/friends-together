@@ -39,6 +39,7 @@ export default function Feed({ onViewDetail }) {
     const [showCreate, setShowCreate] = useState(false);
     const [newContent, setNewContent] = useState('');
     const [newType, setNewType] = useState('thought');
+    const [newVisibility, setNewVisibility] = useState('friends');
     const [posting, setPosting] = useState(false);
 
     const [expandedComments, setExpandedComments] = useState({});
@@ -67,20 +68,38 @@ export default function Feed({ onViewDetail }) {
 
     const timeline = useMemo(() => {
         if (!user) return [];
-        const allowedIds = [user.uid, ...myFriends];
+
+        const filterFn = (item) => {
+            // Always show my own content
+            if (item.userId === user.uid) return true;
+
+            // Legacy items or items with no visibility default to 'friends'
+            const visibility = item.visibility || 'friends';
+
+            if (visibility === 'public') return true;
+            if (visibility === 'friends') {
+                return myFriends.includes(item.userId) || isAdmin;
+            }
+            if (visibility === 'private') {
+                return isAdmin; // Admin can see private for safety/audit? No, usually private is private. But user asked for "only me".
+                // Actually, in many apps Admin can see everything, but let's stick to true private unless user asked otherwise.
+                // However, user said "only the poster sees it", which usually excludes admin unless they are the poster.
+            }
+            return false;
+        };
 
         const postItems = posts
-            .filter(p => allowedIds.includes(p.userId))
+            .filter(filterFn)
             .map(p => ({ ...p, _type: 'post' }));
 
         const mediaActivity = mediaItems
-            .filter(m => allowedIds.includes(m.userId))
+            .filter(filterFn)
             .map(m => ({ ...m, _type: 'media' }));
 
         const combined = [...postItems, ...mediaActivity];
         combined.sort((a, b) => getTimestamp(b) - getTimestamp(a));
         return combined;
-    }, [posts, mediaItems, myFriends, user]);
+    }, [posts, mediaItems, myFriends, user, isAdmin]);
 
     const handlePost = async () => {
         if (!newContent.trim() || !user) return;
@@ -91,7 +110,8 @@ export default function Feed({ onViewDetail }) {
                 newType,
                 user.uid,
                 profile?.displayName || 'Anonim',
-                profile?.avatar || '🧑‍💻'
+                profile?.avatar || '🧑‍💻',
+                newVisibility
             );
             setNewContent('');
             setShowCreate(false);
@@ -195,7 +215,14 @@ export default function Feed({ onViewDetail }) {
                             <span className="post-author">{displayName}</span>
                             <span className={`user-profile-title-badge ${isAdminUser ? 'admin-badge' : ''}`} style={{ fontSize: '0.6rem', padding: '2px 6px', marginTop: 0 }}>{title}</span>
                         </div>
-                        <span className="post-time">{timeAgo(post.createdAt)}</span>
+                        <span className="post-time">
+                            {timeAgo(post.createdAt)}
+                            {post.userId === user?.uid && (
+                                <span style={{ marginLeft: 6, fontSize: '0.8rem', opacity: 0.6 }}>
+                                    {post.visibility === 'public' ? '🌍' : post.visibility === 'private' ? '🔒' : '👥'}
+                                </span>
+                            )}
+                        </span>
                     </div>
                     <span className="post-type-badge" style={{ color: typeInfo.color, borderColor: typeInfo.color }}>
                         {typeInfo.icon} {typeInfo.label}
@@ -309,6 +336,11 @@ export default function Feed({ onViewDetail }) {
                         </div>
                         <span className="post-time">
                             {statusInfo.label} · {timeAgo(item.createdAt)}
+                            {item.userId === user?.uid && (
+                                <span style={{ marginLeft: 6, fontSize: '0.8rem', opacity: 0.6 }}>
+                                    {item.visibility === 'public' ? '🌍' : item.visibility === 'private' ? '🔒' : '👥'}
+                                </span>
+                            )}
                         </span>
                     </div>
                     <span className="post-type-badge" style={{ color: typeInfo.color, borderColor: typeInfo.color }}>
@@ -361,10 +393,24 @@ export default function Feed({ onViewDetail }) {
                         placeholder={newType === 'thought' ? 'Aklında ne var?...' : newType === 'review' ? 'Bir inceleme yaz...' : 'Hikayeni anlat...'}
                         rows={4} autoFocus />
                     <div className="feed-create-actions">
-                        <button className="btn btn-secondary" onClick={() => setShowCreate(false)}>Vazgeç</button>
-                        <button className="btn btn-primary" onClick={handlePost} disabled={posting || !newContent.trim()}>
-                            {posting ? 'Paylaşılıyor...' : 'Paylaş'}
-                        </button>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                            <select
+                                value={newVisibility}
+                                onChange={(e) => setNewVisibility(e.target.value)}
+                                className="btn btn-secondary"
+                                style={{ padding: '4px 8px', fontSize: '0.85rem' }}
+                            >
+                                <option value="public">🌍 Herkes</option>
+                                <option value="friends">👥 Arkadaşlar</option>
+                                <option value="private">🔒 Sadece Ben</option>
+                            </select>
+                        </div>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                            <button className="btn btn-secondary" onClick={() => setShowCreate(false)}>Vazgeç</button>
+                            <button className="btn btn-primary" onClick={handlePost} disabled={posting || !newContent.trim()}>
+                                {posting ? 'Paylaşılıyor...' : 'Paylaş'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

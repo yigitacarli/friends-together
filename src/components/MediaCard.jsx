@@ -1,7 +1,9 @@
 import { MEDIA_TYPES, STATUS_TYPES, TYPE_EXTRA_FIELDS } from '../services/storage';
 import StarRating from './StarRating';
+import { useAuth } from '../context/AuthContext';
 
 export default function MediaCard({ item, onClick, view = 'grid' }) {
+    const { user } = useAuth();
     const typeInfo = MEDIA_TYPES[item.type] || MEDIA_TYPES.movie;
     const statusInfo = STATUS_TYPES[item.status] || STATUS_TYPES.completed;
     const extraFields = TYPE_EXTRA_FIELDS[item.type] || [];
@@ -61,12 +63,19 @@ export default function MediaCard({ item, onClick, view = 'grid' }) {
                 )}
                 <div className="media-card-meta">
                     <StarRating rating={item.rating} readOnly />
-                    <span
-                        className="media-card-status-inline"
-                        style={{ color: statusInfo.color, fontSize: '0.72rem', fontWeight: 600 }}
-                    >
-                        {statusInfo.label}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {item.userId === user?.uid && (
+                            <span style={{ fontSize: '0.7rem', opacity: 0.6 }}>
+                                {item.visibility === 'public' ? '🌍' : item.visibility === 'private' ? '🔒' : '👥'}
+                            </span>
+                        )}
+                        <span
+                            className="media-card-status-inline"
+                            style={{ color: statusInfo.color, fontSize: '0.72rem', fontWeight: 600 }}
+                        >
+                            {statusInfo.label}
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
