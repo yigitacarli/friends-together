@@ -210,16 +210,18 @@ export default function Feed({ onViewDetail }) {
                             className={`vote-btn up ${userVote === 'up' ? 'active' : ''}`}
                             onClick={() => handleVote(post, 'up')}
                             disabled={!isLoggedIn}
+                            style={{ display: 'flex', gap: 4, width: 'auto', paddingLeft: 8, paddingRight: 8 }}
                         >
-                            ▲
+                            ▲ <span style={{ fontSize: '0.9rem', fontWeight: 700 }}>{upvotes.length}</span>
                         </button>
-                        <span className="vote-score">{score}</span>
+                        <div style={{ width: 1, height: '60%', background: 'var(--border)', opacity: 0.5 }}></div>
                         <button
                             className={`vote-btn down ${userVote === 'down' ? 'active' : ''}`}
                             onClick={() => handleVote(post, 'down')}
                             disabled={!isLoggedIn}
+                            style={{ display: 'flex', gap: 4, width: 'auto', paddingLeft: 8, paddingRight: 8 }}
                         >
-                            ▼
+                            ▼ <span style={{ fontSize: '0.9rem', fontWeight: 700 }}>{downvotes.length}</span>
                         </button>
                     </div>
 

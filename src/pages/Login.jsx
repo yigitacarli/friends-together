@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
-export default function Login({ onGuestBrowse }) {
+export default function Login() {
     const { login, register, resetPassword, AVATARS } = useAuth();
     const [mode, setMode] = useState('login'); // 'login' | 'register' | 'reset'
     const [email, setEmail] = useState('');
@@ -56,7 +56,7 @@ export default function Login({ onGuestBrowse }) {
             <div className="login-container">
                 <div className="login-header">
                     <div className="login-logo">📋</div>
-                    <h1 className="login-title">MediaTracker</h1>
+                    <h1 className="login-title">Friends Together</h1>
                     <p className="login-subtitle">
                         {mode === 'register' ? 'Yeni hesap oluştur' :
                             mode === 'reset' ? 'Şifreni sıfırla' :
@@ -123,12 +123,6 @@ export default function Login({ onGuestBrowse }) {
                             {mode === 'register' ? 'Giriş Yap' : mode === 'reset' ? 'Giriş Yap' : 'Kayıt Ol'}
                         </button>
                     </p>
-                </div>
-
-                <div className="login-guest">
-                    <button className="login-guest-btn" onClick={onGuestBrowse} type="button">
-                        👀 Giriş yapmadan göz at
-                    </button>
                 </div>
             </div>
         </div>

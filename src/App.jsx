@@ -27,12 +27,11 @@ export default function App() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
   const [saving, setSaving] = useState(false);
   const [users, setUsers] = useState([]);
-  const [guestMode, setGuestMode] = useState(false);
-  const [showEditProfile, setShowEditProfile] = useState(false); // Modal state
+  const [showEditProfile, setShowEditProfile] = useState(false);
 
   useEffect(() => {
     getAllUsers().then(setUsers);
-  }, [isLoggedIn, guestMode]);
+  }, [isLoggedIn]);
 
   const navigate = useCallback((p) => {
     setPage(p);
@@ -106,8 +105,8 @@ export default function App() {
     );
   }
 
-  if (!isLoggedIn && !guestMode) {
-    return <Login onGuestBrowse={() => setGuestMode(true)} />;
+  if (!isLoggedIn) {
+    return <Login />;
   }
 
   const renderPage = () => {
@@ -175,13 +174,12 @@ export default function App() {
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onAddClick={() => {
-            if (!isLoggedIn) { setGuestMode(false); return; }
             setEditItem(null);
             setShowForm(true);
           }}
           onMenuToggle={() => setSidebarOpen(o => !o)}
-          isGuest={!isLoggedIn}
-          onLoginClick={() => setGuestMode(false)}
+          isGuest={false}
+          onLoginClick={() => { }}
         />
 
         <main className="page-content">
