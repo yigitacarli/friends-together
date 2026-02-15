@@ -1535,6 +1535,13 @@ textarea {
   /* Adjust for header/padding */
 }
 
+@media (max-width: 1024px) {
+  .lobby-page {
+    height: calc(100vh - 80px - 72px);
+    /* Extra space for bottom nav on mobile */
+  }
+}
+
 .chat-container {
   flex: 1;
   display: flex;
@@ -2418,6 +2425,55 @@ textarea {
   text-align: center;
   color: var(--text-muted);
   font-size: 0.9rem;
+}
+
+/* --- NOTIFICATION FRIEND ACTIONS --- */
+.notif-friend-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.notif-accept-btn {
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(52, 211, 153, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.notif-accept-btn:hover {
+  background: rgba(52, 211, 153, 0.25);
+}
+
+.notif-accept-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.notif-reject-btn {
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(248, 113, 113, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.notif-reject-btn:hover {
+  background: rgba(248, 113, 113, 0.2);
+}
+
+.notif-reject-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* --- TITLE BADGE --- */

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { listenToNotifications, markAsRead, markAllAsRead } from '../services/notifications';
+import { listenToNotifications, markAllAsRead } from '../services/notifications';
+import { acceptFriendRequest, removeFriendRequest } from '../services/friends';
 
 function timeAgo(date) {
     if (!date) return '';
@@ -13,10 +14,33 @@ function timeAgo(date) {
     return `${Math.floor(diff / 86400)}g`;
 }
 
+function getNotifText(item) {
+    const name = item.data?.userName || 'Biri';
+    switch (item.type) {
+        case 'like':
+        case 'upvote':
+            return { text: `${name} gönderini beğendi`, emoji: '❤️' };
+        case 'downvote':
+            return { text: `${name} gönderine oy verdi`, emoji: '👎' };
+        case 'comment':
+            return {
+                text: `${name} ${item.data?.content ? `yorum yaptı: "${item.data.content.slice(0, 50)}${item.data.content.length > 50 ? '...' : ''}"` : 'gönderine yorum yaptı'}`,
+                emoji: '💬'
+            };
+        case 'friend_request':
+            return { text: `${name} sana arkadaşlık isteği gönderdi`, emoji: '👋' };
+        case 'friend_accept':
+            return { text: `${name} arkadaşlık isteğini kabul etti`, emoji: '🤝' };
+        default:
+            return { text: `${name} bir bildirim gönderdi`, emoji: '🔔' };
+    }
+}
+
 export default function Notifications() {
-    const { user } = useAuth();
+    const { user, profile } = useAuth();
     const [items, setItems] = useState([]);
     const [isOpen, setIsOpen] = useState(false);
+    const [processingId, setProcessingId] = useState(null);
     const dropdownRef = useRef(null);
 
     useEffect(() => {
@@ -46,6 +70,35 @@ export default function Notifications() {
         }
     };
 
+    const handleAcceptFriend = async (notif) => {
+        if (processingId) return;
+        const requesterId = notif.data?.userId;
+        if (!requesterId) return;
+        setProcessingId(notif.id);
+        try {
+            await acceptFriendRequest(user.uid, profile, requesterId);
+        } catch (e) {
+            console.error('Accept friend error:', e);
+            alert('Kabul edilemedi, tekrar dene.');
+        } finally {
+            setProcessingId(null);
+        }
+    };
+
+    const handleRejectFriend = async (notif) => {
+        if (processingId) return;
+        const requesterId = notif.data?.userId;
+        if (!requesterId) return;
+        setProcessingId(notif.id);
+        try {
+            await removeFriendRequest(user.uid, requesterId);
+        } catch (e) {
+            console.error('Reject friend error:', e);
+        } finally {
+            setProcessingId(null);
+        }
+    };
+
     if (!user) return null;
 
     return (
@@ -60,7 +113,11 @@ export default function Notifications() {
                     <div className="notifications-header">
                         <h3>Bildirimler</h3>
                         {unreadCount > 0 && (
-                            <button className="btn-text-sm" onClick={() => markAllAsRead(user.uid, items)}>
+                            <button
+                                className="btn-text-sm"
+                                onClick={() => markAllAsRead(user.uid, items)}
+                                style={{ background: 'none', color: 'var(--accent-secondary)', fontSize: '0.75rem', cursor: 'pointer' }}
+                            >
                                 Tümünü Oku
                             </button>
                         )}
@@ -70,19 +127,44 @@ export default function Notifications() {
                         {items.length === 0 ? (
                             <div className="notifications-empty">Henüz bildirim yok 💤</div>
                         ) : (
-                            items.map(item => (
-                                <div key={item.id} className={`notification-item ${!item.read ? 'unread' : ''}`}>
-                                    <span className="notif-avatar">{item.data?.userAvatar || '👤'}</span>
-                                    <div className="notif-content">
-                                        <p>
-                                            <strong>{item.data?.userName || 'Biri'}</strong>
-                                            {item.type === 'like' && ' gönderini beğendi ❤️'}
-                                            {item.type === 'comment' && ' gönderine yorum yaptı 💬'}
-                                        </p>
-                                        <span className="notif-time">{timeAgo(item.createdAt)}</span>
+                            items.map(item => {
+                                const { text, emoji } = getNotifText(item);
+                                const isFriendRequest = item.type === 'friend_request';
+                                const isProcessing = processingId === item.id;
+
+                                return (
+                                    <div key={item.id} className={`notification-item ${!item.read ? 'unread' : ''}`}>
+                                        <span className="notif-avatar">{item.data?.userAvatar || '👤'}</span>
+                                        <div className="notif-content">
+                                            <p style={{ margin: 0, lineHeight: 1.4 }}>
+                                                {emoji} {text}
+                                            </p>
+
+                                            {/* Arkadaşlık isteği kabul/red butonları */}
+                                            {isFriendRequest && (
+                                                <div className="notif-friend-actions">
+                                                    <button
+                                                        className="notif-accept-btn"
+                                                        onClick={() => handleAcceptFriend(item)}
+                                                        disabled={isProcessing}
+                                                    >
+                                                        {isProcessing ? '⏳' : '✓ Kabul Et'}
+                                                    </button>
+                                                    <button
+                                                        className="notif-reject-btn"
+                                                        onClick={() => handleRejectFriend(item)}
+                                                        disabled={isProcessing}
+                                                    >
+                                                        ✕ Reddet
+                                                    </button>
+                                                </div>
+                                            )}
+
+                                            <span className="notif-time">{timeAgo(item.createdAt)}</span>
+                                        </div>
                                     </div>
-                                </div>
-                            ))
+                                );
+                            })
                         )}
                     </div>
                 </div>

@@ -91,13 +91,18 @@ export async function votePost(postId, userId, voteType, userName, userAvatar) {
                 downvotes: arrayRemove(userId)
             });
 
+            // Bildirim gönder (hata olursa sessizce devam et)
             if (postData.userId !== userId) {
-                await sendNotification(postData.userId, 'like', {
-                    postId,
-                    userId,
-                    userName: userName || 'Birisi',
-                    userAvatar: userAvatar || '🧑‍💻'
-                });
+                try {
+                    await sendNotification(postData.userId, 'like', {
+                        postId,
+                        userId,
+                        userName: userName || 'Birisi',
+                        userAvatar: userAvatar || '🧑‍💻'
+                    });
+                } catch (notifErr) {
+                    console.error('Vote notification error:', notifErr);
+                }
             }
         }
     } else if (voteType === 'down') {
