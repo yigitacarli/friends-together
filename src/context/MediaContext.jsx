@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { getAllMedia, addMedia, updateMedia, deleteMedia } from '../services/storage';
+import { db } from '../services/firebase';
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { addMedia, updateMedia, deleteMedia } from '../services/storage';
 import { useAuth } from './AuthContext';
 
 const MediaContext = createContext(null);
@@ -9,37 +11,32 @@ export function MediaProvider({ children }) {
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const refresh = useCallback(async () => {
-        setLoading(true);
-        try {
-            const data = await getAllMedia();
-            setItems(data);
-        } catch (err) {
-            console.error('Failed to load media:', err);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
+    // Realtime listener — anında güncellenir
     useEffect(() => {
-        refresh();
-    }, [refresh]);
+        const q = query(collection(db, 'media'), orderBy('createdAt', 'desc'));
+        const unsub = onSnapshot(q, (snapshot) => {
+            const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            setItems(data);
+            setLoading(false);
+        }, (err) => {
+            console.error('Realtime listener error:', err);
+            setLoading(false);
+        });
+        return unsub;
+    }, []);
 
     const add = useCallback(async (item) => {
         if (!user || !profile) return;
         await addMedia(item, user.uid, profile.displayName);
-        await refresh();
-    }, [refresh, user, profile]);
+    }, [user, profile]);
 
     const update = useCallback(async (id, data) => {
         await updateMedia(id, data);
-        await refresh();
-    }, [refresh]);
+    }, []);
 
     const remove = useCallback(async (id) => {
         await deleteMedia(id);
-        await refresh();
-    }, [refresh]);
+    }, []);
 
     const getById = useCallback((id) => {
         return items.find(i => i.id === id) || null;
@@ -67,7 +64,6 @@ export function MediaProvider({ children }) {
         <MediaContext.Provider value={{
             items,
             loading,
-            refresh,
             add,
             update,
             remove,

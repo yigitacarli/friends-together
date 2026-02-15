@@ -4,6 +4,7 @@ import {
     onAuthStateChanged,
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
+    sendPasswordResetEmail,
     signOut,
     updateProfile,
 } from 'firebase/auth';
@@ -15,7 +16,6 @@ const AVATARS = ['🧑‍💻', '👩‍🎨', '🧑‍🚀', '👩‍🔬', '�
 
 // ─── DAVETİYE KODU ───────────────────────────────────
 // Bu kodu sadece arkadaşlarınla paylaş!
-// Değiştirmek istersen buradan değiştirebilirsin.
 const INVITE_CODE = 'TRACKER2026';
 // ──────────────────────────────────────────────────────
 
@@ -55,7 +55,6 @@ export function AuthProvider({ children }) {
     }, []);
 
     const register = useCallback(async (email, password, displayName, avatar, inviteCode) => {
-        // Davet kodu kontrolü
         if (inviteCode !== INVITE_CODE) {
             throw { code: 'auth/invalid-invite-code', message: 'Geçersiz davet kodu!' };
         }
@@ -71,6 +70,10 @@ export function AuthProvider({ children }) {
         setProfile({ id: cred.user.uid, ...profileData });
     }, []);
 
+    const resetPassword = useCallback(async (email) => {
+        await sendPasswordResetEmail(auth, email);
+    }, []);
+
     const logout = useCallback(async () => {
         await signOut(auth);
     }, []);
@@ -84,6 +87,7 @@ export function AuthProvider({ children }) {
             login,
             register,
             logout,
+            resetPassword,
             AVATARS,
         }}>
             {children}

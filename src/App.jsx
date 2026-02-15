@@ -3,20 +3,20 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import MediaForm from './components/MediaForm';
 import Dashboard from './pages/Dashboard';
-import MediaList from './pages/MediaList';
 import MediaDetail from './pages/MediaDetail';
 import Stats from './pages/Stats';
 import Feed from './pages/Feed';
+import MyCollection from './pages/MyCollection';
 import UserProfile from './pages/UserProfile';
 import Login from './pages/Login';
 import { useMedia } from './context/MediaContext';
 import { useAuth } from './context/AuthContext';
-import { getAllUsers, MEDIA_TYPES } from './services/storage';
+import { getAllUsers } from './services/storage';
 
 export default function App() {
   const { add, update, remove } = useMedia();
   const { user, profile, isLoggedIn, loading: authLoading } = useAuth();
-  const [page, setPage] = useState('dashboard');
+  const [page, setPage] = useState('feed');
   const [searchQuery, setSearchQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState(null);
@@ -28,7 +28,6 @@ export default function App() {
   const [guestMode, setGuestMode] = useState(false);
 
   useEffect(() => {
-    // Load users for both logged-in users and guests
     getAllUsers().then(setUsers);
   }, [isLoggedIn, guestMode]);
 
@@ -93,7 +92,6 @@ export default function App() {
     }
   };
 
-  // Auth loading
   if (authLoading) {
     return (
       <div className="login-page">
@@ -105,7 +103,6 @@ export default function App() {
     );
   }
 
-  // Not logged in and not guest → show login page
   if (!isLoggedIn && !guestMode) {
     return <Login onGuestBrowse={() => setGuestMode(true)} />;
   }
@@ -123,27 +120,20 @@ export default function App() {
       );
     }
 
-    if (page === 'dashboard') {
-      return <Dashboard onNavigate={navigate} onViewDetail={viewDetail} />;
+    if (page === 'feed') {
+      return <Feed onViewDetail={viewDetail} />;
     }
 
-    if (page === 'feed') {
-      return <Feed />;
+    if (page === 'my-collection' && isLoggedIn) {
+      return <MyCollection onViewDetail={viewDetail} />;
     }
 
     if (page === 'stats') {
       return <Stats />;
     }
 
-    if (page === 'my-profile' && isLoggedIn) {
-      return (
-        <UserProfile
-          userId={user?.uid}
-          userName={profile?.displayName}
-          userAvatar={profile?.avatar}
-          onViewDetail={viewDetail}
-        />
-      );
+    if (page === 'dashboard') {
+      return <Dashboard onNavigate={navigate} onViewDetail={viewDetail} />;
     }
 
     // user-{userId} pages
@@ -160,17 +150,7 @@ export default function App() {
       );
     }
 
-    if (MEDIA_TYPES[page]) {
-      return (
-        <MediaList
-          type={page}
-          searchQuery={searchQuery}
-          onViewDetail={viewDetail}
-        />
-      );
-    }
-
-    return null;
+    return <Feed onViewDetail={viewDetail} />;
   };
 
   return (
@@ -190,10 +170,7 @@ export default function App() {
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onAddClick={() => {
-            if (!isLoggedIn) {
-              setGuestMode(false);
-              return;
-            }
+            if (!isLoggedIn) { setGuestMode(false); return; }
             setEditItem(null);
             setShowForm(true);
           }}
