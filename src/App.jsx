@@ -127,7 +127,7 @@ export default function App() {
     if (page === 'events') return <Events />;
     if (page === 'lobby') return <Lobby />;
     if (page === 'stats') return <Stats />;
-    if (page === 'community') return <Community />;
+    if (page === 'community') return <Community onNavigate={navigate} />;
     if (page === 'dashboard') return <Dashboard onNavigate={navigate} onViewDetail={viewDetail} />;
 
     if (page === 'my-profile' && isLoggedIn) {

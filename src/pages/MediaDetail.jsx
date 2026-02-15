@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useMedia } from '../context/MediaContext';
 import { MEDIA_TYPES, STATUS_TYPES, TYPE_EXTRA_FIELDS } from '../services/storage';
 import { getComments, addComment, deleteComment } from '../services/comments';
+import { getFriendStatus } from '../services/friends';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import StarRating from '../components/StarRating';
@@ -20,7 +21,7 @@ function timeAgo(date) {
 
 export default function MediaDetail({ mediaId, onBack, onEdit, onDelete, currentUserId }) {
     const { getById, loading } = useMedia();
-    const { user, profile, isAdmin } = useAuth();
+    const { user, profile, isAdmin, getUser } = useAuth();
     const item = getById(mediaId);
 
     // States for comments & owner profile
@@ -192,19 +193,26 @@ export default function MediaDetail({ mediaId, onBack, onEdit, onDelete, current
                         )}
                     </div>
 
-                    {user && (
-                        <div className="comment-input-row" style={{ marginTop: 20 }}>
-                            <input
-                                type="text"
-                                placeholder="Bu inceleme hakkında bir şeyler yaz..."
-                                value={commentText}
-                                onChange={e => setCommentText(e.target.value)}
-                                onKeyDown={e => e.key === 'Enter' && handleAddComment()}
-                            />
-                            <button className="btn btn-primary" onClick={handleAddComment}>Gönder</button>
-                        </div>
-                    )}
                 </div>
+                {/* Comment Permission Logic */}
+                {user && (isOwner || getFriendStatus(getUser(user?.uid), item.userId) === 'friends' || isAdmin) ? (
+                    <div className="comment-input-row" style={{ marginTop: 20 }}>
+                        <input
+                            type="text"
+                            placeholder="Bu inceleme hakkında bir şeyler yaz..."
+                            value={commentText}
+                            onChange={e => setCommentText(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && handleAddComment()}
+                        />
+                        <button className="btn btn-primary" onClick={handleAddComment}>Gönder</button>
+                    </div>
+                ) : (
+                    item.userId !== user?.uid && (
+                        <div style={{ marginTop: 20, padding: 16, background: 'var(--bg-secondary)', borderRadius: 12, textAlign: 'center', color: 'var(--text-muted)' }}>
+                            <p style={{ margin: 0 }}>🔒 Bu içeriğe sadece arkadaşlar yorum yapabilir.</p>
+                        </div>
+                    )
+                )}
             </div>
         </div>
     );

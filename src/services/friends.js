@@ -114,6 +114,35 @@ export async function removeFriend(currentUserId, friendId) {
 }
 
 // Get relationship status
+// Cancel a sent request (Sender cancels their own request)
+export async function cancelFriendRequest(currentUserId, targetUserId) {
+    try {
+        const myRef = doc(db, 'users', currentUserId);
+        const targetRef = doc(db, 'users', targetUserId);
+
+        const [mySnap, targetSnap] = await Promise.all([getDoc(myRef), getDoc(targetRef)]);
+
+        if (mySnap.exists()) {
+            const myData = mySnap.data();
+            const myRequests = myData.friendRequests || [];
+            // Remove the 'sent' request to target
+            const newMyRequests = myRequests.filter(r => r.uid !== targetUserId);
+            await updateDoc(myRef, { friendRequests: newMyRequests });
+        }
+
+        if (targetSnap.exists()) {
+            const targetData = targetSnap.data();
+            const targetRequests = targetData.friendRequests || [];
+            // Remove the 'received' request from current user
+            const newTargetRequests = targetRequests.filter(r => r.uid !== currentUserId);
+            await updateDoc(targetRef, { friendRequests: newTargetRequests });
+        }
+    } catch (error) {
+        console.error("Error cancelling friend request: ", error);
+        throw error;
+    }
+}
+
 export function getFriendStatus(currentUser, targetUserId) {
     if (!currentUser) return 'none';
     if (currentUser.friends?.includes(targetUserId)) return 'friends';
