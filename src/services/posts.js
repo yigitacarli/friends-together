@@ -47,11 +47,30 @@ export async function createPost(post, userId, userName, userAvatar) {
     return { id: docRef.id, ...newPost };
 }
 
-export async function likePost(postId, userId) {
-    const ref = doc(db, POSTS_COLLECTION, postId);
-    await updateDoc(ref, {
-        likes: arrayUnion(userId),
+const NOTIF_COLLECTION = 'notifications';
+import { sendNotification } from './notifications';
+
+export async function likePost(postId, userId, userName, userAvatar) { // Updated params
+    const postRef = doc(db, POSTS_COLLECTION, postId);
+
+    // Get post to know owner
+    const postSnap = await getDoc(postRef);
+    if (!postSnap.exists()) return;
+    const postData = postSnap.data();
+
+    await updateDoc(postRef, {
+        likes: arrayUnion(userId)
     });
+
+    // Notify if not self
+    if (postData.userId !== userId) {
+        await sendNotification(postData.userId, 'like', {
+            postId,
+            userId,
+            userName,
+            userAvatar: userAvatar || '🧑‍💻'
+        });
+    }
     // Also update likeCount manually (read current and increment)
     // For simplicity, we refetch after like
 }

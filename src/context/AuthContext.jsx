@@ -8,14 +8,24 @@ import {
     signOut,
     updateProfile,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 
 const AuthContext = createContext(null);
 
-const AVATARS = ['🧑‍💻', '👩‍🎨', '🧑‍🚀', '👩‍🔬', '🧙‍♂️', '🦊', '🐱', '🦉', '🎭', '🌟', '🔥', '💎'];
+const AVATARS = [
+    '🧑‍💻', '👩‍🎨', '🧑‍🚀', '👩‍🔬', '🧙‍♂️', '🦊', '🐱', '🦉', '🎭', '🌟', '🔥', '💎',
+    '🐶', '🦄', '🐲', '🍄', '🌍', '🌞', '🌙', '⚡', '⛄', '🍔', '🍕', '🍣',
+    '🎸', '🎮', '🏀', '⚽', '🏎️', '✈️', '🚀', '🛸', '🗿', '🤖', '👾', '🤡'
+];
+
+const FUNNY_TITLES = [
+    'Çaylak Üye', 'Dizi Maratoncusu', 'Film Gurmesi', 'Spoiler Canavarı',
+    'Uyku Tutmayan', 'Keksever', 'Profesyonel Tembel', 'Meme Lordu',
+    'Kaos Yöneticisi', 'Haftasonu Savaşçısı', 'Gece Kuşu', 'Kitap Kurdu',
+    'Pixel Sanatçısı', 'Kod Büyücüsü', 'Kahve Bağımlısı'
+];
 
 // ─── DAVETİYE KODU ───────────────────────────────────
-// Bu kodu sadece arkadaşlarınla paylaş!
 const INVITE_CODE = 'TRACKER2026';
 // ──────────────────────────────────────────────────────
 
@@ -36,6 +46,7 @@ export function AuthProvider({ children }) {
                         displayName: firebaseUser.displayName || 'Kullanıcı',
                         email: firebaseUser.email,
                         avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)],
+                        title: 'Çaylak Üye',
                         createdAt: new Date().toISOString(),
                     };
                     await setDoc(doc(db, 'users', firebaseUser.uid), newProfile);
@@ -64,11 +75,18 @@ export function AuthProvider({ children }) {
             displayName,
             email,
             avatar: avatar || AVATARS[Math.floor(Math.random() * AVATARS.length)],
+            title: 'Çaylak Üye',
             createdAt: new Date().toISOString(),
         };
         await setDoc(doc(db, 'users', cred.user.uid), profileData);
         setProfile({ id: cred.user.uid, ...profileData });
     }, []);
+
+    const updateUserProfile = useCallback(async (data) => {
+        if (!user) return;
+        await updateDoc(doc(db, 'users', user.uid), data);
+        setProfile(prev => ({ ...prev, ...data }));
+    }, [user]);
 
     const resetPassword = useCallback(async (email) => {
         await sendPasswordResetEmail(auth, email);
@@ -88,7 +106,9 @@ export function AuthProvider({ children }) {
             register,
             logout,
             resetPassword,
+            updateUserProfile,
             AVATARS,
+            FUNNY_TITLES,
         }}>
             {children}
         </AuthContext.Provider>

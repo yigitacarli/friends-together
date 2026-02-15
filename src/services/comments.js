@@ -1,10 +1,12 @@
 import { db } from './firebase';
+import { sendNotification } from './notifications';
 import {
     collection,
     addDoc,
+    getDoc,
+    doc,
     getDocs,
     deleteDoc,
-    doc,
     query,
     orderBy,
     serverTimestamp,
@@ -32,6 +34,27 @@ export async function addComment(postId, content, userId, userName, userAvatar) 
         createdAt: serverTimestamp(),
     };
     const docRef = await addDoc(getCommentsRef(postId), comment);
+
+    // Notify post owner
+    try {
+        const postRef = doc(db, 'posts', postId);
+        const postSnap = await getDoc(postRef);
+        if (postSnap.exists()) {
+            const postData = postSnap.data();
+            if (postData.userId !== userId) {
+                await sendNotification(postData.userId, 'comment', {
+                    postId,
+                    userId,
+                    userName,
+                    userAvatar: comment.userAvatar,
+                    content: comment.content
+                });
+            }
+        }
+    } catch (err) {
+        console.error('Notification error:', err);
+    }
+
     return { id: docRef.id, ...comment };
 }
 

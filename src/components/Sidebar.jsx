@@ -19,11 +19,13 @@ export default function Sidebar({ currentPage, onNavigate, isOpen }) {
         <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
             {/* User info */}
             {profile ? (
-                <div className="sidebar-user" onClick={() => onNavigate('my-collection')}>
+                <div className="sidebar-user" onClick={() => onNavigate('my-profile')}>
                     <span className="sidebar-user-avatar">{profile.avatar}</span>
                     <div className="sidebar-user-info">
                         <span className="sidebar-user-name">{profile.displayName}</span>
-                        <span className="sidebar-user-email">{profile.email}</span>
+                        <span className="sidebar-user-email" style={{ color: 'var(--accent-primary)', fontWeight: 500 }}>
+                            {profile.title || 'Çaylak Üye'}
+                        </span>
                     </div>
                 </div>
             ) : (

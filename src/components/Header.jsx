@@ -1,4 +1,5 @@
 import { useAuth } from '../context/AuthContext';
+import Notifications from './Notifications';
 
 export default function Header({ searchQuery, onSearchChange, onAddClick, onMenuToggle, isGuest, onLoginClick }) {
     const { logout, profile, isLoggedIn } = useAuth();
@@ -22,9 +23,10 @@ export default function Header({ searchQuery, onSearchChange, onAddClick, onMenu
             <div className="header-right">
                 {isLoggedIn ? (
                     <>
+                        <Notifications /> {/* Bildirimler burada */}
                         <button className="btn btn-primary" onClick={onAddClick}>
                             <span>+</span>
-                            <span>Yeni Ekle</span>
+                            <span className="hide-mobile">Yeni Ekle</span>
                         </button>
                         <button
                             className="btn btn-secondary"
@@ -33,7 +35,7 @@ export default function Header({ searchQuery, onSearchChange, onAddClick, onMenu
                             style={{ gap: 6 }}
                         >
                             <span>🚪</span>
-                            <span>Çıkış</span>
+                            <span className="hide-mobile">Çıkış</span>
                         </button>
                     </>
                 ) : (
