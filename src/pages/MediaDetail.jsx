@@ -2,8 +2,11 @@ import { useMedia } from '../context/MediaContext';
 import { MEDIA_TYPES, STATUS_TYPES, TYPE_EXTRA_FIELDS } from '../services/storage';
 import StarRating from '../components/StarRating';
 
+import { useAuth } from '../context/AuthContext';
+
 export default function MediaDetail({ mediaId, onBack, onEdit, onDelete, currentUserId }) {
     const { getById, loading } = useMedia();
+    const { isAdmin } = useAuth();
     const item = getById(mediaId);
 
     if (loading) {
@@ -33,6 +36,7 @@ export default function MediaDetail({ mediaId, onBack, onEdit, onDelete, current
     const typeInfo = MEDIA_TYPES[item.type] || MEDIA_TYPES.movie;
     const statusInfo = STATUS_TYPES[item.status] || STATUS_TYPES.completed;
     const isOwner = currentUserId && item.userId === currentUserId;
+    const canEdit = isOwner || isAdmin;
 
     return (
         <div className="detail-page">
@@ -95,7 +99,7 @@ export default function MediaDetail({ mediaId, onBack, onEdit, onDelete, current
                         </div>
                     )}
 
-                    {isOwner && (
+                    {canEdit && (
                         <div className="detail-actions">
                             <button className="btn btn-secondary" onClick={() => onEdit(item)}>
                                 ✏️ Düzenle
@@ -115,7 +119,7 @@ export default function MediaDetail({ mediaId, onBack, onEdit, onDelete, current
                 </div>
             )}
 
-            {!item.review && isOwner && (
+            {!item.review && canEdit && (
                 <div className="detail-section">
                     <h3 className="detail-section-title">💬 Yorum & İnceleme</h3>
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem' }}>

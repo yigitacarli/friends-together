@@ -96,12 +96,15 @@ export function AuthProvider({ children }) {
         await signOut(auth);
     }, []);
 
+    const isAdmin = user?.email === 'acarliyigit@gmail.com';
+
     return (
         <AuthContext.Provider value={{
             user,
             profile,
             loading,
             isLoggedIn: !!user,
+            isAdmin, // Export admin status
             login,
             register,
             logout,

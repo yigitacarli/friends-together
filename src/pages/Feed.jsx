@@ -25,7 +25,7 @@ function getTimestamp(item) {
 }
 
 export default function Feed({ onViewDetail }) {
-    const { user, profile, isLoggedIn } = useAuth();
+    const { user, profile, isLoggedIn, isAdmin } = useAuth();
     const { items: mediaItems } = useMedia();
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -150,7 +150,7 @@ export default function Feed({ onViewDetail }) {
                     <button className="post-comment-btn" onClick={() => toggleComments(post.id)}>
                         💬 {comments.length > 0 ? comments.length : ''}
                     </button>
-                    {user && post.userId === user.uid && (
+                    {user && (post.userId === user.uid || isAdmin) && (
                         <button className="post-delete-btn" onClick={() => handleDeletePost(post.id)}>🗑️</button>
                     )}
                 </div>
@@ -165,7 +165,7 @@ export default function Feed({ onViewDetail }) {
                                     <div className="comment-header">
                                         <span className="comment-author">{c.userName}</span>
                                         <span className="comment-time">{timeAgo(c.createdAt)}</span>
-                                        {user && c.userId === user.uid && (
+                                        {user && (c.userId === user.uid || isAdmin) && (
                                             <button className="comment-delete" onClick={() => handleDeleteComment(post.id, c.id)}>✕</button>
                                         )}
                                     </div>

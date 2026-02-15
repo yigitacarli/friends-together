@@ -15,7 +15,7 @@ import { getAllUsers } from './services/storage';
 
 export default function App() {
   const { add, update, remove } = useMedia();
-  const { user, profile, isLoggedIn, loading: authLoading } = useAuth();
+  const { user, profile, isLoggedIn, isAdmin, loading: authLoading } = useAuth();
   const [page, setPage] = useState('feed');
   const [searchQuery, setSearchQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
@@ -63,7 +63,7 @@ export default function App() {
 
   const handleEdit = (item) => {
     if (!isLoggedIn) return;
-    if (item.userId && item.userId !== user?.uid) {
+    if (item.userId && item.userId !== user?.uid && !isAdmin) {
       alert('Sadece kendi eklediğin medyaları düzenleyebilirsin!');
       return;
     }
@@ -73,7 +73,7 @@ export default function App() {
 
   const handleDelete = (id, ownerId) => {
     if (!isLoggedIn) return;
-    if (ownerId && ownerId !== user?.uid) {
+    if (ownerId && ownerId !== user?.uid && !isAdmin) {
       alert('Sadece kendi eklediğin medyaları silebilirsin!');
       return;
     }
