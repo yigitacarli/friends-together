@@ -108,24 +108,37 @@ export default function Notifications() {
                 {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
             </button>
 
+            {/* Mobilde arka plan overlay */}
+            {isOpen && <div className="notif-overlay" onClick={() => setIsOpen(false)} />}
+
             {isOpen && (
                 <div className="notifications-dropdown">
                     <div className="notifications-header">
-                        <h3>Bildirimler</h3>
-                        {unreadCount > 0 && (
+                        <h3>🔔 Bildirimler {unreadCount > 0 && <span style={{ fontSize: '0.75rem', color: '#a78bfa', fontWeight: 400 }}>({unreadCount} yeni)</span>}</h3>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                            {unreadCount > 0 && (
+                                <button
+                                    className="notif-mark-read-btn"
+                                    onClick={() => markAllAsRead(user.uid, items)}
+                                >
+                                    ✓ Okundu
+                                </button>
+                            )}
                             <button
-                                className="btn-text-sm"
-                                onClick={() => markAllAsRead(user.uid, items)}
-                                style={{ background: 'none', color: 'var(--accent-secondary)', fontSize: '0.75rem', cursor: 'pointer' }}
+                                className="notif-close-btn"
+                                onClick={() => setIsOpen(false)}
                             >
-                                Tümünü Oku
+                                ✕
                             </button>
-                        )}
+                        </div>
                     </div>
 
                     <div className="notifications-list">
                         {items.length === 0 ? (
-                            <div className="notifications-empty">Henüz bildirim yok 💤</div>
+                            <div className="notifications-empty">
+                                <span style={{ fontSize: '2rem', display: 'block', marginBottom: 8 }}>💤</span>
+                                Henüz bildirim yok
+                            </div>
                         ) : (
                             items.map(item => {
                                 const { text, emoji } = getNotifText(item);
@@ -136,11 +149,10 @@ export default function Notifications() {
                                     <div key={item.id} className={`notification-item ${!item.read ? 'unread' : ''}`}>
                                         <span className="notif-avatar">{item.data?.userAvatar || '👤'}</span>
                                         <div className="notif-content">
-                                            <p style={{ margin: 0, lineHeight: 1.4 }}>
+                                            <p style={{ margin: 0, lineHeight: 1.5 }}>
                                                 {emoji} {text}
                                             </p>
 
-                                            {/* Arkadaşlık isteği kabul/red butonları */}
                                             {isFriendRequest && (
                                                 <div className="notif-friend-actions">
                                                     <button
