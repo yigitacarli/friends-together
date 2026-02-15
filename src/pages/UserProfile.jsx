@@ -110,9 +110,11 @@ export default function UserProfile({ userId, userName, userAvatar, onViewDetail
                 <h2 className="user-profile-name">{displayProfile?.displayName}</h2>
 
                 {/* Title Badge */}
-                <div className="user-profile-title-badge">
-                    {displayProfile?.title || 'Çaylak Üye'}
-                </div>
+                {displayProfile?.title && (
+                    <div className="user-profile-title-badge">
+                        {displayProfile.title}
+                    </div>
+                )}
 
                 {/* Friend Actions */}
                 {!isMe && user && (

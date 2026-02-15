@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useMedia } from '../context/MediaContext';
-import { MEDIA_TYPES, STATUS_TYPES, TYPE_EXTRA_FIELDS } from '../services/storage';
+import { MEDIA_TYPES, STATUS_TYPES, TYPE_EXTRA_FIELDS, voteMedia } from '../services/storage';
 import { getComments, addComment, deleteComment } from '../services/comments';
 import { getFriendStatus } from '../services/friends';
 import { doc, getDoc } from 'firebase/firestore';
@@ -96,7 +96,18 @@ export default function MediaDetail({ mediaId, onBack, onEdit, onDelete, current
     // Use owner profile if loaded, fallback to item data
     const displayAvatar = ownerProfile?.avatar || item.userAvatar || '🧑‍💻';
     const displayName = ownerProfile?.displayName || item.userName || 'Kullanıcı';
-    const displayTitle = ownerProfile?.title || 'Çaylak Üye';
+    const displayTitle = ownerProfile ? (ownerProfile.title || 'Üye') : null;
+
+    const upvotes = item.upvotes || [];
+    const downvotes = item.downvotes || [];
+    const userVote = upvotes.includes(user?.uid) ? 'up' : downvotes.includes(user?.uid) ? 'down' : null;
+
+    const handleVote = async (type) => {
+        if (!user) return;
+        try {
+            await voteMedia(item.id, user.uid, type, profile?.displayName, profile?.avatar);
+        } catch (err) { console.error('MediaDetail vote error:', err); }
+    };
 
     return (
         <div className="detail-page">
@@ -112,9 +123,11 @@ export default function MediaDetail({ mediaId, onBack, onEdit, onDelete, current
                         <span className="feed-avatar" style={{ fontSize: '2.5rem' }}>{displayAvatar}</span>
                         <div>
                             <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{displayName}</div>
-                            <div className="user-profile-title-badge" style={{ fontSize: '0.65rem', padding: '2px 8px' }}>
-                                {displayTitle}
-                            </div>
+                            {displayTitle && (
+                                <div className="user-profile-title-badge" style={{ fontSize: '0.65rem', padding: '2px 8px' }}>
+                                    {displayTitle}
+                                </div>
+                            )}
                             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 4 }}>
                                 {new Date(item.date || new Date()).toLocaleDateString('tr-TR')} tarihinde paylaştı
                             </div>
@@ -182,6 +195,32 @@ export default function MediaDetail({ mediaId, onBack, onEdit, onDelete, current
                         <p className="detail-review-text" style={{ fontSize: '1rem', lineHeight: 1.6 }}>"{item.review}"</p>
                     </div>
                 )}
+
+                {/* Upvote / Downvote */}
+                <div className="post-actions" style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
+                    <div className="vote-actions">
+                        <button
+                            className={`vote-btn up ${userVote === 'up' ? 'active' : ''}`}
+                            onClick={() => handleVote('up')}
+                            disabled={!user}
+                            style={{ display: 'flex', gap: 4, width: 'auto', paddingLeft: 8, paddingRight: 8 }}
+                        >
+                            ▲ <span style={{ fontSize: '0.9rem', fontWeight: 700 }}>{upvotes.length}</span>
+                        </button>
+                        <div style={{ width: 1, height: '60%', background: 'var(--border)', opacity: 0.5 }}></div>
+                        <button
+                            className={`vote-btn down ${userVote === 'down' ? 'active' : ''}`}
+                            onClick={() => handleVote('down')}
+                            disabled={!user}
+                            style={{ display: 'flex', gap: 4, width: 'auto', paddingLeft: 8, paddingRight: 8 }}
+                        >
+                            ▼ <span style={{ fontSize: '0.9rem', fontWeight: 700 }}>{downvotes.length}</span>
+                        </button>
+                    </div>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                        {upvotes.length > 0 ? `${upvotes.length} kişi beğendi` : 'Henüz beğeni yok'}
+                    </span>
+                </div>
 
                 {/* Comments Section */}
                 <div className="detail-section" style={{ borderTop: '1px solid var(--border)', paddingTop: 24, marginTop: 24 }}>

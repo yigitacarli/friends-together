@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useMedia } from '../context/MediaContext';
 import { getAllPosts, addPost, votePost, deletePost, updatePostVisibility } from '../services/posts';
+import { voteMedia } from '../services/storage';
 import { getComments, addComment, deleteComment } from '../services/comments';
 import { MEDIA_TYPES, STATUS_TYPES } from '../services/storage';
 import StarRating from '../components/StarRating';
@@ -154,6 +155,15 @@ export default function Feed({ onViewDetail, onNavigate }) {
         }
     };
 
+    const handleMediaVote = async (item, type) => {
+        if (!user) return;
+        try {
+            await voteMedia(item.id, user.uid, type, profile?.displayName, profile?.avatar);
+        } catch (error) {
+            console.error('Media vote error:', error);
+        }
+    };
+
     const handleDeletePost = async (postId) => {
         if (!window.confirm('Silmek istediğine emin misin?')) return;
         try { await deletePost(postId); await loadPosts(); } catch (err) { console.error(err); }
@@ -215,7 +225,7 @@ export default function Feed({ onViewDetail, onNavigate }) {
         const displayName = author?.displayName || post.userName;
         const avatar = author?.avatar || post.userAvatar || '🧑‍💻';
         const isAdminUser = author?.email === 'acarliyigit@gmail.com';
-        const title = isAdminUser ? '👑 Admin' : (author?.title || 'Çaylak Üye');
+        const title = author ? (isAdminUser ? '👑 Admin' : (author.title || 'Üye')) : null;
         const lastComment = comments.length > 0 ? comments[comments.length - 1] : null;
 
         return (
@@ -225,7 +235,7 @@ export default function Feed({ onViewDetail, onNavigate }) {
                     <div className="post-header-info">
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <span className="post-author clickable-profile" onClick={() => onNavigate?.(post.userId === user?.uid ? 'my-profile' : `user-${post.userId}`)}>{displayName}</span>
-                            <span className={`user-profile-title-badge ${isAdminUser ? 'admin-badge' : ''}`} style={{ fontSize: '0.6rem', padding: '2px 6px', marginTop: 0 }}>{title}</span>
+                            {title && <span className={`user-profile-title-badge ${isAdminUser ? 'admin-badge' : ''}`} style={{ fontSize: '0.6rem', padding: '2px 6px', marginTop: 0 }}>{title}</span>}
                         </div>
                         <span className="post-time">
                             {timeAgo(post.createdAt)}
@@ -304,9 +314,9 @@ export default function Feed({ onViewDetail, onNavigate }) {
                                     <div className="comment-body">
                                         <div className="comment-header">
                                             <span className="comment-author">{cAuthor?.displayName || c.userName}</span>
-                                            <span className={`user-profile-title-badge ${cAuthor?.email === 'acarliyigit@gmail.com' ? 'admin-badge' : ''}`} style={{ fontSize: '0.55rem', padding: '1px 4px', marginRight: 6 }}>
-                                                {cAuthor?.email === 'acarliyigit@gmail.com' ? '👑 Admin' : (cAuthor?.title || 'Çaylak Üye')}
-                                            </span>
+                                            {cAuthor && <span className={`user-profile-title-badge ${cAuthor?.email === 'acarliyigit@gmail.com' ? 'admin-badge' : ''}`} style={{ fontSize: '0.55rem', padding: '1px 4px', marginRight: 6 }}>
+                                                {cAuthor.email === 'acarliyigit@gmail.com' ? '👑 Admin' : (cAuthor.title || 'Üye')}
+                                            </span>}
                                             <span className="comment-time">{timeAgo(c.createdAt)}</span>
                                             {user && (c.userId === user.uid || isAdmin) && (
                                                 <button className="comment-delete" onClick={() => handleDeleteComment(post.id, c.id)}>✕</button>
@@ -343,10 +353,11 @@ export default function Feed({ onViewDetail, onNavigate }) {
         const displayName = author?.displayName || item.userName || 'Bilinmeyen';
         const avatar = author?.avatar || '🧑‍💻';
         const isAdminUser = author?.email === 'acarliyigit@gmail.com';
-        const title = isAdminUser ? '👑 Admin' : (author?.title || 'Çaylak Üye');
+        const title = author ? (isAdminUser ? '👑 Admin' : (author.title || 'Üye')) : null;
 
-        // Placeholder fix
-        const coverUrl = item.coverUrl || 'https://placehold.co/400x600/2a2a2a/FFF?text=Görsel+Yok';
+        const upvotes = item.upvotes || [];
+        const downvotes = item.downvotes || [];
+        const userVote = upvotes.includes(user?.uid) ? 'up' : downvotes.includes(user?.uid) ? 'down' : null;
 
         return (
             <div key={`media-${item.id}`} className="activity-card" onClick={() => onViewDetail?.(item.id)}>
@@ -355,7 +366,7 @@ export default function Feed({ onViewDetail, onNavigate }) {
                     <div className="post-header-info">
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <span className="post-author clickable-profile" onClick={(e) => { e.stopPropagation(); onNavigate?.(item.userId === user?.uid ? 'my-profile' : `user-${item.userId}`); }}>{displayName}</span>
-                            <span className={`user-profile-title-badge ${isAdminUser ? 'admin-badge' : ''}`} style={{ fontSize: '0.6rem', padding: '2px 6px', marginTop: 0 }}>{title}</span>
+                            {title && <span className={`user-profile-title-badge ${isAdminUser ? 'admin-badge' : ''}`} style={{ fontSize: '0.6rem', padding: '2px 6px', marginTop: 0 }}>{title}</span>}
                         </div>
                         <span className="post-time">
                             {statusInfo.label} · {timeAgo(item.createdAt)}
@@ -403,6 +414,29 @@ export default function Feed({ onViewDetail, onNavigate }) {
                         {item.review && (
                             <p className="activity-review">"{item.review.length > 150 ? item.review.slice(0, 150) + '...' : item.review}"</p>
                         )}
+                    </div>
+                </div>
+
+                {/* Upvote / Downvote */}
+                <div className="post-actions" onClick={(e) => e.stopPropagation()}>
+                    <div className="vote-actions">
+                        <button
+                            className={`vote-btn up ${userVote === 'up' ? 'active' : ''}`}
+                            onClick={() => handleMediaVote(item, 'up')}
+                            disabled={!isLoggedIn}
+                            style={{ display: 'flex', gap: 4, width: 'auto', paddingLeft: 8, paddingRight: 8 }}
+                        >
+                            ▲ <span style={{ fontSize: '0.9rem', fontWeight: 700 }}>{upvotes.length}</span>
+                        </button>
+                        <div style={{ width: 1, height: '60%', background: 'var(--border)', opacity: 0.5 }}></div>
+                        <button
+                            className={`vote-btn down ${userVote === 'down' ? 'active' : ''}`}
+                            onClick={() => handleMediaVote(item, 'down')}
+                            disabled={!isLoggedIn}
+                            style={{ display: 'flex', gap: 4, width: 'auto', paddingLeft: 8, paddingRight: 8 }}
+                        >
+                            ▼ <span style={{ fontSize: '0.9rem', fontWeight: 700 }}>{downvotes.length}</span>
+                        </button>
                     </div>
                 </div>
             </div>

@@ -28,7 +28,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onEditProfile
                             <button className="sidebar-edit-icon" onClick={onEditProfile} title="Profili Düzenle">⚙️</button>
                         </div>
                         <span className="sidebar-user-email" style={{ color: 'var(--accent-primary)', fontWeight: 500 }}>
-                            {profile.title || 'Çaylak Üye'}
+                            {profile.title || 'Üye'}
                         </span>
                     </div>
                 </div>

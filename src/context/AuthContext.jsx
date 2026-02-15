@@ -118,19 +118,25 @@ export function AuthProvider({ children }) {
                 setUser(firebaseUser);
 
                 // First check if profile exists
-                const profileSnap = await getDoc(doc(db, 'users', firebaseUser.uid));
-                if (!profileSnap.exists()) {
-                    // Create profile ONCE for new users (merge: true as safety)
-                    const newProfile = {
-                        displayName: firebaseUser.displayName || 'Kullanıcı',
-                        email: firebaseUser.email,
-                        avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)],
-                        title: 'Çaylak Üye',
-                        friends: [],
-                        friendRequests: [],
-                        createdAt: new Date().toISOString(),
-                    };
-                    await setDoc(doc(db, 'users', firebaseUser.uid), newProfile, { merge: true });
+                try {
+                    const profileSnap = await getDoc(doc(db, 'users', firebaseUser.uid));
+                    if (!profileSnap.exists()) {
+                        // Create profile ONCE for new users
+                        // merge:true yerine normal setDoc — sadece profil yoksa çalışır
+                        const newProfile = {
+                            displayName: firebaseUser.displayName || 'Kullanıcı',
+                            email: firebaseUser.email,
+                            avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)],
+                            title: 'Yeni Üye',
+                            friends: [],
+                            friendRequests: [],
+                            createdAt: new Date().toISOString(),
+                        };
+                        await setDoc(doc(db, 'users', firebaseUser.uid), newProfile);
+                    }
+                } catch (profileErr) {
+                    console.error('Profil kontrol/oluşturma hatası:', profileErr);
+                    // Hata durumunda mevcut profili bozmuyoruz
                 }
 
                 // Now listen to profile changes in real-time
@@ -166,7 +172,7 @@ export function AuthProvider({ children }) {
             displayName,
             email,
             avatar: avatar || AVATARS[Math.floor(Math.random() * AVATARS.length)],
-            title: 'Çaylak Üye',
+            title: 'Yeni Üye',
             friends: [],
             friendRequests: [],
             createdAt: new Date().toISOString(),
