@@ -1,21 +1,21 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useMedia } from '../context/MediaContext';
-import { getAllPosts, createPost, likePost, unlikePost, deletePost, POST_TYPES } from '../services/posts';
+import { getPosts, addPost, votePost, deletePost } from '../services/posts';
 import { getComments, addComment, deleteComment } from '../services/comments';
 import { MEDIA_TYPES, STATUS_TYPES } from '../services/storage';
 import StarRating from '../components/StarRating';
 
-function timeAgo(dateStr) {
-    if (!dateStr) return '';
+function timeAgo(date) {
+    if (!date) return '';
     const now = new Date();
-    const date = dateStr.toDate ? dateStr.toDate() : new Date(dateStr);
-    const diff = Math.floor((now - date) / 1000);
+    const d = date.toDate ? date.toDate() : new Date(date);
+    const diff = Math.floor((now - d) / 1000);
     if (diff < 60) return 'Az önce';
     if (diff < 3600) return `${Math.floor(diff / 60)}dk önce`;
     if (diff < 86400) return `${Math.floor(diff / 3600)}sa önce`;
     if (diff < 604800) return `${Math.floor(diff / 86400)}g önce`;
-    return date.toLocaleDateString('tr-TR');
+    return d.toLocaleDateString('tr-TR');
 }
 
 function getTimestamp(item) {
@@ -23,6 +23,13 @@ function getTimestamp(item) {
     if (item.createdAt.toDate) return item.createdAt.toDate().getTime();
     return new Date(item.createdAt).getTime();
 }
+
+const POST_TYPES = {
+    thought: { label: 'Düşünce', icon: '💭', color: '#818cf8' },
+    review: { label: 'İnceleme', icon: '📝', color: '#f472b6' },
+    memory: { label: 'Anı', icon: '📸', color: '#fbbf24' },
+    quote: { label: 'Alıntı', icon: '💬', color: '#34d399' }
+};
 
 export default function Feed({ onViewDetail }) {
     const { user, profile, isLoggedIn, isAdmin, getUser } = useAuth();
@@ -34,24 +41,36 @@ export default function Feed({ onViewDetail }) {
     const [newType, setNewType] = useState('thought');
     const [posting, setPosting] = useState(false);
 
-    // Comments state
-    const [commentsByPost, setCommentsByPost] = useState({});
     const [expandedComments, setExpandedComments] = useState({});
+    const [commentsByPost, setCommentsByPost] = useState({});
     const [commentInputs, setCommentInputs] = useState({});
 
     const loadPosts = useCallback(async () => {
-        setLoading(true);
-        try {
-            const data = await getAllPosts();
-            setPosts(data);
-        } finally {
-            setLoading(false);
-        }
+        const { posts: p } = await getPosts();
+        setPosts(p);
+        setLoading(false);
+        // Pre-fetch comment counts for visible posts? 
+        // For simpler logic, we fetch comments when expanding or rely on denormalized count if we had one.
+        // Currently we fetch on toggle.
+        // To show "Comment Preview" we might need to fetch comments for ALL posts initially? That's expensive.
+        // Let's implement lazy load: click to load.
+        // But user asked for "comments or number visible without click".
+        // The number is best handled by fetching comments for all posts or storing commentCount on post.
+        // Storing commentCount on post is ideal but requires cloud function or careful management.
+        // Let's iterate posts and fetch comments for each silently?
+        // Or just lazy load on scroll.
+        // Let's fetch lightweight comments for top 10 posts.
+        p.forEach(post => {
+            getComments(post.id).then(cmts => {
+                setCommentsByPost(prev => ({ ...prev, [post.id]: cmts }));
+            });
+        });
+
     }, []);
 
     useEffect(() => { loadPosts(); }, [loadPosts]);
 
-    // Merge posts + media into a single timeline
+    // Merge
     const timeline = useMemo(() => {
         const postItems = posts.map(p => ({ ...p, _type: 'post' }));
         const mediaActivity = mediaItems.map(m => ({ ...m, _type: 'media' }));
@@ -64,9 +83,12 @@ export default function Feed({ onViewDetail }) {
         if (!newContent.trim() || !user) return;
         setPosting(true);
         try {
-            await createPost(
-                { content: newContent.trim(), postType: newType },
-                user.uid, profile?.displayName || 'Anonim', profile?.avatar || '🧑‍💻'
+            await addPost(
+                newContent.trim(),
+                newType,
+                user.uid,
+                profile?.displayName || 'Anonim',
+                profile?.avatar || '🧑‍💻'
             );
             setNewContent('');
             setShowCreate(false);
@@ -74,28 +96,52 @@ export default function Feed({ onViewDetail }) {
         } finally { setPosting(false); }
     };
 
-    const handleLike = async (post) => {
+    const handleVote = async (post, type) => {
         if (!user) return;
-        try {
-            if (post.likes?.includes(user.uid)) {
-                await unlikePost(post.id, user.uid);
-            } else {
-                await likePost(post.id, user.uid);
+        // Optimistic update
+        setPosts(prev => prev.map(p => {
+            if (p.id !== post.id) return p;
+
+            const upvotes = p.upvotes || p.likes || [];
+            const downvotes = p.downvotes || [];
+            let newUp = [...upvotes];
+            let newDown = [...downvotes];
+
+            if (type === 'up') {
+                if (newUp.includes(user.uid)) {
+                    newUp = newUp.filter(id => id !== user.uid);
+                } else {
+                    newUp.push(user.uid);
+                    newDown = newDown.filter(id => id !== user.uid);
+                }
+            } else if (type === 'down') {
+                if (newDown.includes(user.uid)) {
+                    newDown = newDown.filter(id => id !== user.uid);
+                } else {
+                    newDown.push(user.uid);
+                    newUp = newUp.filter(id => id !== user.uid);
+                }
             }
-            await loadPosts();
-        } catch (err) { console.error('Like error:', err); }
+            return { ...p, upvotes: newUp, downvotes: newDown, likes: newUp };
+        }));
+
+        try {
+            await votePost(post.id, user.uid, type, profile.displayName, profile.avatar);
+        } catch (error) {
+            console.error(error);
+            loadPosts();
+        }
     };
 
     const handleDeletePost = async (postId) => {
-        if (!window.confirm('Bu gönderiyi silmek istediğine emin misin?')) return;
+        if (!window.confirm('Silmek istediğine emin misin?')) return;
         try { await deletePost(postId); await loadPosts(); } catch (err) { console.error(err); }
     };
 
-    // Comments
     const toggleComments = async (postId) => {
-        const isOpen = expandedComments[postId];
-        setExpandedComments(prev => ({ ...prev, [postId]: !isOpen }));
-        if (!isOpen && !commentsByPost[postId]) {
+        setExpandedComments(prev => ({ ...prev, [postId]: !prev[postId] }));
+        // If not loaded, load (though we are preloading now)
+        if (!commentsByPost[postId]) {
             const cmts = await getComments(postId);
             setCommentsByPost(prev => ({ ...prev, [postId]: cmts }));
         }
@@ -120,11 +166,16 @@ export default function Feed({ onViewDetail }) {
         } catch (err) { console.error(err); }
     };
 
-    // Render a post card
     const renderPost = (post) => {
-        const typeInfo = POST_TYPES[post.postType] || POST_TYPES.thought;
-        const liked = user && post.likes?.includes(user.uid);
-        const likeCount = post.likes?.length || 0;
+        let typeInfo = POST_TYPES[post.type] || POST_TYPES.thought;
+        // Fallback for old posts
+        if (!post.type && post.postType) typeInfo = POST_TYPES[post.postType] || POST_TYPES.thought;
+
+        const upvotes = post.upvotes || post.likes || [];
+        const downvotes = post.downvotes || [];
+        const score = upvotes.length - downvotes.length;
+        const userVote = upvotes.includes(user?.uid) ? 'up' : downvotes.includes(user?.uid) ? 'down' : null;
+
         const comments = commentsByPost[post.id] || [];
         const isExpanded = expandedComments[post.id];
 
@@ -132,6 +183,8 @@ export default function Feed({ onViewDetail }) {
         const displayName = author?.displayName || post.userName;
         const avatar = author?.avatar || post.userAvatar || '🧑‍💻';
         const title = author?.title || 'Çaylak Üye';
+
+        const lastComment = comments.length > 0 ? comments[comments.length - 1] : null;
 
         return (
             <div key={`post-${post.id}`} className="post-card">
@@ -149,21 +202,48 @@ export default function Feed({ onViewDetail }) {
                     </span>
                 </div>
 
-                <div className="post-content">{post.content}</div>
+                <p className="post-content">{post.content}</p>
 
                 <div className="post-actions">
-                    <button className={`post-like-btn ${liked ? 'liked' : ''}`} onClick={() => handleLike(post)} disabled={!isLoggedIn}>
-                        {liked ? '❤️' : '🤍'} {likeCount > 0 ? likeCount : ''}
-                    </button>
+                    <div className="vote-actions">
+                        <button
+                            className={`vote-btn up ${userVote === 'up' ? 'active' : ''}`}
+                            onClick={() => handleVote(post, 'up')}
+                            disabled={!isLoggedIn}
+                        >
+                            ▲
+                        </button>
+                        <span className="vote-score">{score}</span>
+                        <button
+                            className={`vote-btn down ${userVote === 'down' ? 'active' : ''}`}
+                            onClick={() => handleVote(post, 'down')}
+                            disabled={!isLoggedIn}
+                        >
+                            ▼
+                        </button>
+                    </div>
+
                     <button className="post-comment-btn" onClick={() => toggleComments(post.id)}>
-                        💬 {comments.length > 0 ? comments.length : ''}
+                        💬 {comments.length}
                     </button>
                     {user && (post.userId === user.uid || isAdmin) && (
                         <button className="post-delete-btn" onClick={() => handleDeletePost(post.id)}>🗑️</button>
                     )}
                 </div>
 
-                {/* Comments */}
+                {/* Comment Preview */}
+                {!isExpanded && lastComment && (
+                    <div className="comment-preview" onClick={() => toggleComments(post.id)}>
+                        <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
+                            {getUser(lastComment.userId)?.displayName || lastComment.userName}:
+                        </span>
+                        <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
+                            {lastComment.content}
+                        </span>
+                    </div>
+                )}
+
+                {/* Comments Section */}
                 {isExpanded && (
                     <div className="comments-section">
                         {comments.map(c => {
@@ -205,14 +285,13 @@ export default function Feed({ onViewDetail }) {
         );
     };
 
-    // Render a media activity card
     const renderMediaActivity = (item) => {
         const typeInfo = MEDIA_TYPES[item.type] || MEDIA_TYPES.movie;
         const statusInfo = STATUS_TYPES[item.status] || STATUS_TYPES.completed;
 
         const author = getUser(item.userId);
         const displayName = author?.displayName || item.userName || 'Bilinmeyen';
-        const avatar = author?.avatar || '🧑‍💻'; // activity items don't store avatar usually, fallback needed
+        const avatar = author?.avatar || '🧑‍💻';
         const title = author?.title || 'Çaylak Üye';
 
         return (

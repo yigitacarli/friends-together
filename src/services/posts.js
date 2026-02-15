@@ -1,85 +1,110 @@
 import { db } from './firebase';
+import { sendNotification } from './notifications';
 import {
     collection,
     addDoc,
-    getDocs,
-    doc,
+    getDoc,
     updateDoc,
     deleteDoc,
+    doc,
     query,
+    where,
     orderBy,
-    arrayUnion,
-    arrayRemove,
+    limit,
+    startAfter,
+    getDocs,
     serverTimestamp,
+    arrayUnion,
+    arrayRemove
 } from 'firebase/firestore';
 
 const POSTS_COLLECTION = 'posts';
 
-export const POST_TYPES = {
-    thought: { label: 'Düşünce', icon: '💭', color: '#a78bfa' },
-    review: { label: 'İnceleme', icon: '📝', color: '#60a5fa' },
-    story: { label: 'Hikaye', icon: '📖', color: '#f472b6' },
-};
-
-export async function getAllPosts() {
-    try {
-        const q = query(collection(db, POSTS_COLLECTION), orderBy('createdAt', 'desc'));
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-    } catch (err) {
-        console.error('getAllPosts error:', err);
-        return [];
-    }
-}
-
-export async function createPost(post, userId, userName, userAvatar) {
-    const newPost = {
-        content: post.content || '',
-        postType: post.postType || 'thought',
+export async function addPost(content, type, userId, userName, userAvatar) {
+    const docRef = await addDoc(collection(db, POSTS_COLLECTION), {
+        content,
+        type,
         userId,
         userName,
         userAvatar: userAvatar || '🧑‍💻',
         likes: [],
-        likeCount: 0,
-        createdAt: serverTimestamp(),
-    };
-    const docRef = await addDoc(collection(db, POSTS_COLLECTION), newPost);
-    return { id: docRef.id, ...newPost };
+        upvotes: [],
+        downvotes: [],
+        createdAt: serverTimestamp()
+    });
+    return { id: docRef.id };
 }
 
-const NOTIF_COLLECTION = 'notifications';
-import { sendNotification } from './notifications';
+export async function getPosts(lastDoc = null) {
+    try {
+        let q = query(
+            collection(db, POSTS_COLLECTION),
+            orderBy('createdAt', 'desc'),
+            limit(10)
+        );
+        if (lastDoc) {
+            q = query(q, startAfter(lastDoc));
+        }
+        const snapshot = await getDocs(q);
+        const posts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        return { posts, lastDoc: snapshot.docs[snapshot.docs.length - 1] };
+    } catch (error) {
+        console.error("Error getting posts: ", error);
+        return { posts: [], lastDoc: null };
+    }
+}
 
-export async function likePost(postId, userId, userName, userAvatar) { // Updated params
+export async function votePost(postId, userId, voteType, userName, userAvatar) {
     const postRef = doc(db, POSTS_COLLECTION, postId);
-
-    // Get post to know owner
     const postSnap = await getDoc(postRef);
     if (!postSnap.exists()) return;
     const postData = postSnap.data();
 
-    await updateDoc(postRef, {
-        likes: arrayUnion(userId)
-    });
+    // Handle legacy likes as upvotes
+    const upvotes = postData.upvotes || postData.likes || [];
+    const downvotes = postData.downvotes || [];
 
-    // Notify if not self
-    if (postData.userId !== userId) {
-        await sendNotification(postData.userId, 'like', {
-            postId,
-            userId,
-            userName,
-            userAvatar: userAvatar || '🧑‍💻'
-        });
+    const hasUpvoted = upvotes.includes(userId);
+    const hasDownvoted = downvotes.includes(userId);
+
+    if (voteType === 'up') {
+        if (hasUpvoted) {
+            // Toggle off (remove upvote)
+            await updateDoc(postRef, {
+                upvotes: arrayRemove(userId),
+                likes: arrayRemove(userId)
+            });
+        } else {
+            // Add up, remove down
+            await updateDoc(postRef, {
+                upvotes: arrayUnion(userId),
+                likes: arrayUnion(userId),
+                downvotes: arrayRemove(userId)
+            });
+
+            // Notify (only on new upvote, not toggle off)
+            if (postData.userId !== userId) {
+                await sendNotification(postData.userId, 'like', {
+                    postId,
+                    userId,
+                    userName: userName || 'Birisi',
+                    userAvatar: userAvatar || '🧑‍💻'
+                });
+            }
+        }
+    } else if (voteType === 'down') {
+        if (hasDownvoted) {
+            // Toggle off (remove downvote)
+            await updateDoc(postRef, { downvotes: arrayRemove(userId) });
+        } else {
+            // Add down, remove up
+            await updateDoc(postRef, {
+                downvotes: arrayUnion(userId),
+                upvotes: arrayRemove(userId),
+                likes: arrayRemove(userId)
+            });
+        }
     }
-    // Also update likeCount manually (read current and increment)
-    // For simplicity, we refetch after like
-}
-
-export async function unlikePost(postId, userId) {
-    const ref = doc(db, POSTS_COLLECTION, postId);
-    await updateDoc(ref, {
-        likes: arrayRemove(userId),
-    });
 }
 
 export async function deletePost(postId) {

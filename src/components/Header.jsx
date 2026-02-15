@@ -20,6 +20,9 @@ export default function Header({ searchQuery, onSearchChange, onAddClick, onMenu
                     />
                 </div>
             </div>
+
+            <div className="app-logo-text">Friends Together</div>
+
             <div className="header-right">
                 {isLoggedIn ? (
                     <>

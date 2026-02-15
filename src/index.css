@@ -2498,3 +2498,112 @@ textarea {
   background: var(--accent-gradient-subtle);
   border-color: var(--accent-primary);
 }
+
+/* --- APP LOGO (HEADER) --- */
+.app-logo-text {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 1.5rem;
+  background: linear-gradient(135deg, #a78bfa 0%, #f472b6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+  text-transform: uppercase;
+  text-shadow: 0 0 20px rgba(167, 139, 250, 0.3);
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .app-logo-text {
+    display: none;
+  }
+}
+
+/* --- BIGGER BADGES --- */
+.post-type-badge {
+  font-size: 0.85rem !important;
+  padding: 6px 12px !important;
+  border-width: 2px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.detail-type-badge {
+  font-size: 1rem !important;
+  padding: 10px 20px !important;
+}
+
+/* --- VOTE ACTIONS (REDDIT STYLE) --- */
+.vote-actions {
+  display: flex;
+  align-items: center;
+  background: var(--bg-glass);
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  height: 36px;
+}
+
+.vote-btn {
+  background: none;
+  border: none;
+  width: 36px;
+  height: 100%;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: all 0.2s;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.vote-btn:hover {
+  background: var(--bg-glass-hover);
+}
+
+.vote-btn.up.active {
+  color: #fb923c;
+  /* Orange */
+  background: rgba(251, 146, 60, 0.1);
+}
+
+.vote-btn.down.active {
+  color: #818cf8;
+  /* Indigo */
+  background: rgba(129, 140, 248, 0.1);
+}
+
+.vote-score {
+  font-weight: 700;
+  font-size: 0.95rem;
+  min-width: 24px;
+  text-align: center;
+  color: var(--text-primary);
+  line-height: normal;
+}
+
+/* --- COMMENT PREVIEW --- */
+.comment-preview {
+  margin-top: 12px;
+  padding: 10px;
+  background: var(--bg-glass);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--accent-secondary);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  cursor: pointer;
+}
+
+.comment-preview:hover {
+  background: var(--bg-glass-hover);
+}
