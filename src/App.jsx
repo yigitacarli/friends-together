@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, Suspense, lazy } from 'react';
+// Force re-deploy to fix github.io redirection cache issues
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import MediaForm from './components/MediaForm';
