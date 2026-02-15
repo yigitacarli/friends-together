@@ -27,7 +27,6 @@ export default function Header({ searchQuery, onSearchChange, onAddClick, onMenu
                             onClick={logout}
                             title="Çıkış Yap"
                         >
-                            <span>🚪</span>
                             <span className="hide-mobile">Çıkış Yap</span>
                         </button>
                     </>

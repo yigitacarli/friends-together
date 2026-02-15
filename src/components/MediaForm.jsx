@@ -19,7 +19,7 @@ const EMPTY_FORM = {
     artist: '',
     techStack: '',
     githubUrl: '',
-    visibility: 'friends', // public, friends, private
+    visibility: 'public', // public, friends, private
 };
 
 export default function MediaForm({ item, onSave, onClose, saving }) {
@@ -44,7 +44,7 @@ export default function MediaForm({ item, onSave, onClose, saving }) {
                 artist: item.artist || '',
                 techStack: item.techStack || '',
                 githubUrl: item.githubUrl || '',
-                visibility: item.visibility || 'friends',
+                visibility: item.visibility || 'public',
             });
         }
     }, [item]);

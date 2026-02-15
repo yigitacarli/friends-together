@@ -39,7 +39,7 @@ export default function Feed({ onViewDetail }) {
     const [showCreate, setShowCreate] = useState(false);
     const [newContent, setNewContent] = useState('');
     const [newType, setNewType] = useState('thought');
-    const [newVisibility, setNewVisibility] = useState('friends');
+    const [newVisibility, setNewVisibility] = useState('public');
     const [posting, setPosting] = useState(false);
 
     const [expandedComments, setExpandedComments] = useState({});
