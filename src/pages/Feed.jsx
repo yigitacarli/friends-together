@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useMedia } from '../context/MediaContext';
-import { getPosts, addPost, votePost, deletePost } from '../services/posts';
+import { getAllPosts, addPost, votePost, deletePost } from '../services/posts';
 import { getComments, addComment, deleteComment } from '../services/comments';
 import { MEDIA_TYPES, STATUS_TYPES } from '../services/storage';
 import StarRating from '../components/StarRating';
@@ -45,39 +45,42 @@ export default function Feed({ onViewDetail }) {
     const [commentsByPost, setCommentsByPost] = useState({});
     const [commentInputs, setCommentInputs] = useState({});
 
+    // Filter Logic: My posts + Friends' posts
+    const myData = getUser(user?.uid);
+    const myFriends = useMemo(() => myData?.friends || [], [myData]);
+
     const loadPosts = useCallback(async () => {
-        const { posts: p } = await getPosts();
+        // Fetch ALL posts and filter client-side for "Friends Only" feed
+        const p = await getAllPosts();
         setPosts(p);
         setLoading(false);
-        // Pre-fetch comment counts for visible posts? 
-        // For simpler logic, we fetch comments when expanding or rely on denormalized count if we had one.
-        // Currently we fetch on toggle.
-        // To show "Comment Preview" we might need to fetch comments for ALL posts initially? That's expensive.
-        // Let's implement lazy load: click to load.
-        // But user asked for "comments or number visible without click".
-        // The number is best handled by fetching comments for all posts or storing commentCount on post.
-        // Storing commentCount on post is ideal but requires cloud function or careful management.
-        // Let's iterate posts and fetch comments for each silently?
-        // Or just lazy load on scroll.
-        // Let's fetch lightweight comments for top 10 posts.
+
+        // Preload comments for visible posts could be here, but we do lazy load
         p.forEach(post => {
             getComments(post.id).then(cmts => {
                 setCommentsByPost(prev => ({ ...prev, [post.id]: cmts }));
             });
         });
-
     }, []);
 
     useEffect(() => { loadPosts(); }, [loadPosts]);
 
-    // Merge
     const timeline = useMemo(() => {
-        const postItems = posts.map(p => ({ ...p, _type: 'post' }));
-        const mediaActivity = mediaItems.map(m => ({ ...m, _type: 'media' }));
+        if (!user) return [];
+        const allowedIds = [user.uid, ...myFriends];
+
+        const postItems = posts
+            .filter(p => allowedIds.includes(p.userId))
+            .map(p => ({ ...p, _type: 'post' }));
+
+        const mediaActivity = mediaItems
+            .filter(m => allowedIds.includes(m.userId))
+            .map(m => ({ ...m, _type: 'media' }));
+
         const combined = [...postItems, ...mediaActivity];
         combined.sort((a, b) => getTimestamp(b) - getTimestamp(a));
         return combined;
-    }, [posts, mediaItems]);
+    }, [posts, mediaItems, myFriends, user]);
 
     const handlePost = async () => {
         if (!newContent.trim() || !user) return;
@@ -140,7 +143,6 @@ export default function Feed({ onViewDetail }) {
 
     const toggleComments = async (postId) => {
         setExpandedComments(prev => ({ ...prev, [postId]: !prev[postId] }));
-        // If not loaded, load (though we are preloading now)
         if (!commentsByPost[postId]) {
             const cmts = await getComments(postId);
             setCommentsByPost(prev => ({ ...prev, [postId]: cmts }));
@@ -168,12 +170,10 @@ export default function Feed({ onViewDetail }) {
 
     const renderPost = (post) => {
         let typeInfo = POST_TYPES[post.type] || POST_TYPES.thought;
-        // Fallback for old posts
         if (!post.type && post.postType) typeInfo = POST_TYPES[post.postType] || POST_TYPES.thought;
 
         const upvotes = post.upvotes || post.likes || [];
         const downvotes = post.downvotes || [];
-        const score = upvotes.length - downvotes.length;
         const userVote = upvotes.includes(user?.uid) ? 'up' : downvotes.includes(user?.uid) ? 'down' : null;
 
         const comments = commentsByPost[post.id] || [];
@@ -183,7 +183,6 @@ export default function Feed({ onViewDetail }) {
         const displayName = author?.displayName || post.userName;
         const avatar = author?.avatar || post.userAvatar || '🧑‍💻';
         const title = author?.title || 'Çaylak Üye';
-
         const lastComment = comments.length > 0 ? comments[comments.length - 1] : null;
 
         return (
@@ -233,7 +232,6 @@ export default function Feed({ onViewDetail }) {
                     )}
                 </div>
 
-                {/* Comment Preview */}
                 {!isExpanded && lastComment && (
                     <div className="comment-preview" onClick={() => toggleComments(post.id)}>
                         <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
@@ -245,7 +243,6 @@ export default function Feed({ onViewDetail }) {
                     </div>
                 )}
 
-                {/* Comments Section */}
                 {isExpanded && (
                     <div className="comments-section">
                         {comments.map(c => {
@@ -296,6 +293,9 @@ export default function Feed({ onViewDetail }) {
         const avatar = author?.avatar || '🧑‍💻';
         const title = author?.title || 'Çaylak Üye';
 
+        // Placeholder fix
+        const coverUrl = item.coverUrl || 'https://placehold.co/400x600/2a2a2a/FFF?text=Görsel+Yok';
+
         return (
             <div key={`media-${item.id}`} className="activity-card" onClick={() => onViewDetail?.(item.id)}>
                 <div className="post-header">
@@ -315,9 +315,7 @@ export default function Feed({ onViewDetail }) {
                 </div>
 
                 <div className="activity-body">
-                    {item.coverUrl && (
-                        <img src={item.coverUrl} alt={item.title} className="activity-cover" />
-                    )}
+                    <img src={coverUrl} alt={item.title} className="activity-cover" />
                     <div className="activity-info">
                         <h4 className="activity-title">{item.title}</h4>
                         {item.rating > 0 && <StarRating rating={item.rating} readOnly />}
@@ -376,9 +374,9 @@ export default function Feed({ onViewDetail }) {
                 </div>
             ) : timeline.length === 0 ? (
                 <div className="empty-state">
-                    <div className="empty-state-icon">💬</div>
-                    <h3 className="empty-state-title">Henüz hiçbir şey yok</h3>
-                    <p className="empty-state-text">İlk medyanı ekle veya bir şeyler paylaş!</p>
+                    <div className="empty-state-icon">👥</div>
+                    <h3 className="empty-state-title">Akışın boş görünüyor</h3>
+                    <p className="empty-state-text">Arkadaş ekleyerek onların paylaşımlarını burada görebilirsin!</p>
                 </div>
             ) : (
                 <div className="feed-list">

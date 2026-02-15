@@ -10,7 +10,7 @@ function formatDate(timestamp) {
 }
 
 export default function Events() {
-    const { user, profile } = useAuth();
+    const { user, profile, getUser } = useAuth();
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showCreate, setShowCreate] = useState(false);
@@ -117,22 +117,28 @@ export default function Events() {
                     </div>
                     <div className="form-group">
                         <label className="form-label">Davet Et (Arkadaşlarını Seç)</label>
-                        <div className="avatar-picker" style={{ maxHeight: 200, overflowY: 'auto', justifyContent: 'flex-start' }}>
-                            {users.filter(u => u.id !== user.uid).map(friend => (
+                        <div className="avatar-picker" style={{ maxHeight: 200, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            {users.filter(u => getUser(user.uid)?.friends?.includes(u.id)).map(friend => (
                                 <button
                                     key={friend.id}
                                     className={`friend-select-btn ${selectedFriends.includes(friend.id) ? 'selected' : ''}`}
                                     onClick={() => setSelectedFriends(prev =>
                                         prev.includes(friend.id) ? prev.filter(id => id !== friend.id) : [...prev, friend.id]
                                     )}
+                                    type="button"
                                 >
-                                    <span style={{ fontSize: '1.2rem' }}>{friend.avatar}</span>
-                                    <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>{friend.displayName}</span>
-                                    {selectedFriends.includes(friend.id) && <span style={{ marginLeft: 'auto', color: '#34d399' }}>✔</span>}
+                                    <span style={{ fontSize: '1.2rem' }}>{friend.avatar || '🧑‍💻'}</span>
+                                    <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{friend.displayName}</span>
+                                    {selectedFriends.includes(friend.id) && <span style={{ marginLeft: 'auto', color: '#34d399', fontWeight: 'bold' }}>✔ Seçildi</span>}
                                 </button>
                             ))}
+                            {users.filter(u => getUser(user.uid)?.friends?.includes(u.id)).length === 0 && (
+                                <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-muted)' }}>
+                                    <p>Henüz arkadaşın yok :(</p>
+                                    <p style={{ fontSize: '0.8rem' }}>Profil sayfandan arkadaş ekleyebilirsin.</p>
+                                </div>
+                            )}
                         </div>
-                        {users.length <= 1 && <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Henüz arkadaşın yok :(</p>}
                     </div>
                     <div className="feed-create-actions">
                         <button className="btn btn-secondary" onClick={() => setShowCreate(false)}>İptal</button>

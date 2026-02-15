@@ -8,7 +8,6 @@ import {
     deleteDoc,
     doc,
     query,
-    where,
     orderBy,
     limit,
     startAfter,
@@ -35,12 +34,24 @@ export async function addPost(content, type, userId, userName, userAvatar) {
     return { id: docRef.id };
 }
 
+// Used for feed filtering (avoids pagination issues with client-side filtering)
+export async function getAllPosts() {
+    try {
+        const q = query(collection(db, POSTS_COLLECTION), orderBy('createdAt', 'desc')); // No limit
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (error) {
+        console.error("Error getting all posts: ", error);
+        return [];
+    }
+}
+
 export async function getPosts(lastDoc = null) {
     try {
         let q = query(
             collection(db, POSTS_COLLECTION),
             orderBy('createdAt', 'desc'),
-            limit(10)
+            limit(50)
         );
         if (lastDoc) {
             q = query(q, startAfter(lastDoc));
@@ -60,7 +71,6 @@ export async function votePost(postId, userId, voteType, userName, userAvatar) {
     if (!postSnap.exists()) return;
     const postData = postSnap.data();
 
-    // Handle legacy likes as upvotes
     const upvotes = postData.upvotes || postData.likes || [];
     const downvotes = postData.downvotes || [];
 
@@ -69,20 +79,17 @@ export async function votePost(postId, userId, voteType, userName, userAvatar) {
 
     if (voteType === 'up') {
         if (hasUpvoted) {
-            // Toggle off (remove upvote)
             await updateDoc(postRef, {
                 upvotes: arrayRemove(userId),
                 likes: arrayRemove(userId)
             });
         } else {
-            // Add up, remove down
             await updateDoc(postRef, {
                 upvotes: arrayUnion(userId),
                 likes: arrayUnion(userId),
                 downvotes: arrayRemove(userId)
             });
 
-            // Notify (only on new upvote, not toggle off)
             if (postData.userId !== userId) {
                 await sendNotification(postData.userId, 'like', {
                     postId,
@@ -94,10 +101,8 @@ export async function votePost(postId, userId, voteType, userName, userAvatar) {
         }
     } else if (voteType === 'down') {
         if (hasDownvoted) {
-            // Toggle off (remove downvote)
             await updateDoc(postRef, { downvotes: arrayRemove(userId) });
         } else {
-            // Add down, remove up
             await updateDoc(postRef, {
                 downvotes: arrayUnion(userId),
                 upvotes: arrayRemove(userId),

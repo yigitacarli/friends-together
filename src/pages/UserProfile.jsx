@@ -1,26 +1,39 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useMedia } from '../context/MediaContext';
-import { MEDIA_TYPES, STATUS_TYPES } from '../services/storage';
+import { MEDIA_TYPES } from '../services/storage';
 import MediaCard from '../components/MediaCard';
+import {
+    sendFriendRequest,
+    acceptFriendRequest,
+    removeFriend,
+    getFriendStatus,
+    removeFriendRequest
+} from '../services/friends';
 
 export default function UserProfile({ userId, userName, userAvatar, onViewDetail }) {
-    const { user, profile: myProfile, updateUserProfile, AVATARS, FUNNY_TITLES } = useAuth();
+    const { user, profile: myProfile, getUser } = useAuth();
     const { items, getByUser } = useMedia();
     const [activeType, setActiveType] = useState('all');
-    const [isEditing, setIsEditing] = useState(false);
+    const [friendStatus, setFriendStatus] = useState('none');
+    const [loadingAction, setLoadingAction] = useState(false);
 
-    // Profile data might be different if viewing someone else
-    // If viewing self, use realtime profile data from context
     const isMe = user && user.uid === userId;
-    const currentProfile = isMe ? myProfile : { displayName: userName, avatar: userAvatar, id: userId };
 
-    // Edit states
-    const [editName, setEditName] = useState('');
-    const [editAvatar, setEditAvatar] = useState('');
-    const [editTitle, setEditTitle] = useState('');
+    // Get realtime profile data
+    const userProfile = getUser(userId);
+    const displayProfile = isMe ? myProfile : (userProfile || { displayName: userName, avatar: userAvatar, id: userId, title: 'Çaylak Üye' });
 
-    const userItems = useMemo(() => getByUser(userId), [items, userId]);
+    // Calculate friend status
+    useEffect(() => {
+        if (!user || isMe) return;
+        const myData = getUser(user.uid);
+        if (myData) {
+            setFriendStatus(getFriendStatus(myData, userId));
+        }
+    }, [user, userId, getUser, isMe]);
+
+    const userItems = useMemo(() => getByUser(userId), [items, userId, getByUser]);
 
     const counts = useMemo(() => {
         const c = { total: userItems.length };
@@ -30,42 +43,76 @@ export default function UserProfile({ userId, userName, userAvatar, onViewDetail
 
     const filtered = useMemo(() => {
         let data = activeType === 'all' ? [...userItems] : userItems.filter(i => i.type === activeType);
-        data.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-        return data;
+        data.sort((a, b) => (b.date || '').localeCompare(a.date || '')); // Newest first
+        return data; // No slice, show all
     }, [userItems, activeType]);
 
-    const handleEditOpen = () => {
-        setEditName(currentProfile?.displayName || '');
-        setEditAvatar(currentProfile?.avatar || '🧑‍💻');
-        setEditTitle(currentProfile?.title || 'Çaylak Üye');
-        setIsEditing(true);
+    // Handlers
+    const handleSendRequest = async () => {
+        if (loadingAction) return;
+        setLoadingAction(true);
+        try {
+            await sendFriendRequest(user.uid, myProfile, userId);
+        } catch (e) {
+            console.error(e);
+            alert('İstek gönderilemedi.');
+        } finally { setLoadingAction(false); }
     };
 
-    const handleSave = async () => {
-        if (!editName.trim()) return;
+    const handleAccept = async () => {
+        if (loadingAction) return;
+        setLoadingAction(true);
         try {
-            await updateUserProfile({
-                displayName: editName.trim(),
-                avatar: editAvatar,
-                title: editTitle.trim()
-            });
-            setIsEditing(false);
-        } catch (err) {
-            console.error('Update error:', err);
-            alert('Güncelleme hatası!');
-        }
+            await acceptFriendRequest(user.uid, myProfile, userId);
+        } catch (e) { console.error(e); } finally { setLoadingAction(false); }
+    };
+
+    const handleReject = async () => {
+        try { await removeFriendRequest(user.uid, userId); } catch (e) { console.error(e); }
+    };
+
+    const handleRemoveFriend = async () => {
+        if (!window.confirm('Arkadaşlıktan çıkarmak istediğine emin misin?')) return;
+        try { await removeFriend(user.uid, userId); } catch (e) { console.error(e); }
     };
 
     return (
         <div className="user-profile-page">
             <div className="user-profile-hero">
-                <div className="user-profile-avatar">{currentProfile?.avatar || '🧑‍💻'}</div>
-                <h2 className="user-profile-name">{currentProfile?.displayName}</h2>
+                <div className="user-profile-avatar">{displayProfile?.avatar || '🧑‍💻'}</div>
+                <h2 className="user-profile-name">{displayProfile?.displayName}</h2>
 
                 {/* Title Badge */}
                 <div className="user-profile-title-badge">
-                    {currentProfile?.title || 'Çaylak Üye'}
+                    {displayProfile?.title || 'Çaylak Üye'}
                 </div>
+
+                {/* Friend Actions */}
+                {!isMe && user && (
+                    <div style={{ marginTop: 16 }}>
+                        {friendStatus === 'none' && (
+                            <button className="btn btn-primary" onClick={handleSendRequest} disabled={loadingAction}>
+                                ➕ Arkadaş Ekle
+                            </button>
+                        )}
+                        {friendStatus === 'sent' && (
+                            <button className="btn btn-secondary" disabled>
+                                ⏳ İstek Gönderildi
+                            </button>
+                        )}
+                        {friendStatus === 'friends' && (
+                            <button className="btn btn-secondary" onClick={handleRemoveFriend}>
+                                🤝 Arkadaşsınız
+                            </button>
+                        )}
+                        {friendStatus === 'received' && (
+                            <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+                                <button className="btn btn-primary" onClick={handleAccept} disabled={loadingAction}>Kabul Et</button>
+                                <button className="btn btn-secondary" onClick={handleReject} disabled={loadingAction}>Reddet</button>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 <div className="user-profile-stats" style={{ marginTop: 24 }}>
                     <div className="user-profile-stat">
@@ -105,53 +152,6 @@ export default function UserProfile({ userId, userName, userAvatar, onViewDetail
             {filtered.length === 0 && (
                 <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
                     Bu kategoride içerik yok.
-                </div>
-            )}
-
-            {/* EDIT MODAL */}
-            {isEditing && (
-                <div className="modal-overlay" onClick={() => setIsEditing(false)}>
-                    <div className="modal" onClick={e => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h3>Profili Düzenle</h3>
-                            <button className="btn-icon" onClick={() => setIsEditing(false)}>✕</button>
-                        </div>
-                        <div className="modal-body">
-                            <div className="form-group">
-                                <label className="form-label">Avatar</label>
-                                <div className="avatar-picker" style={{ maxHeight: 150, overflowY: 'auto' }}>
-                                    {AVATARS.map(av => (
-                                        <button key={av} type="button"
-                                            className={`avatar-option ${editAvatar === av ? 'selected' : ''}`}
-                                            onClick={() => setEditAvatar(av)}
-                                        >
-                                            {av}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="form-group">
-                                <label className="form-label">Görünen İsim</label>
-                                <input type="text" value={editName} onChange={e => setEditName(e.target.value)} />
-                            </div>
-
-                            <div className="form-group">
-                                <label className="form-label">Ünvan (Title)</label>
-                                <input type="text" value={editTitle} onChange={e => setEditTitle(e.target.value)} placeholder="Kendine bir ünvan seç..." list="titles-list" />
-                                <datalist id="titles-list">
-                                    {FUNNY_TITLES.map(t => <option key={t} value={t} />)}
-                                </datalist>
-                                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
-                                    Listedeki komik ünvanlardan seç veya kendi havalı ünvanını yaz!
-                                </p>
-                            </div>
-                        </div>
-                        <div className="modal-footer">
-                            <button className="btn btn-secondary" onClick={() => setIsEditing(false)}>İptal</button>
-                            <button className="btn btn-primary" onClick={handleSave}>Kaydet</button>
-                        </div>
-                    </div>
                 </div>
             )}
         </div>

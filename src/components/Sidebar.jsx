@@ -12,7 +12,11 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onEditProfile
         getAllUsers().then(setUsers);
     }, [items, user]); // reload users if items change (active status maybe?)
 
-    const otherUsers = users.filter(u => u.id !== user?.uid);
+    const otherUsers = users.filter(u => {
+        if (u.id === user?.uid) return false;
+        const myData = getUser(user?.uid);
+        return myData?.friends?.includes(u.id);
+    });
     const myCount = isLoggedIn ? items.filter(i => i.userId === user?.uid).length : 0;
 
     return (
