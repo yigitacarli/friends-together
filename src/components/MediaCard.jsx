@@ -14,10 +14,18 @@ export default function MediaCard({ item, onClick, view = 'grid' }) {
             <div className="media-list-item" onClick={() => onClick && onClick(item)}>
                 <div className="media-list-item-cover">
                     {item.coverUrl ? (
-                        <img src={item.coverUrl} alt={item.title} />
-                    ) : (
-                        <span style={{ fontSize: '1.5rem', opacity: 0.3 }}>{typeInfo.icon}</span>
-                    )}
+                        <img
+                            src={item.coverUrl}
+                            alt={item.title}
+                            onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                            }}
+                        />
+                    ) : null}
+                    <span style={{ fontSize: '1.5rem', opacity: 0.3, display: item.coverUrl ? 'none' : 'flex', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                        {typeInfo.icon}
+                    </span>
                 </div>
                 <div className="media-list-item-info">
                     <div className="media-list-item-title">{item.title}</div>
@@ -40,10 +48,19 @@ export default function MediaCard({ item, onClick, view = 'grid' }) {
         <div className="media-card" onClick={() => onClick && onClick(item)}>
             <div className="media-card-cover">
                 {item.coverUrl ? (
-                    <img src={item.coverUrl} alt={item.title} loading="lazy" />
-                ) : (
-                    <span className="media-card-cover-placeholder">{typeInfo.icon}</span>
-                )}
+                    <img
+                        src={item.coverUrl}
+                        alt={item.title}
+                        loading="lazy"
+                        onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                        }}
+                    />
+                ) : null}
+                <span className="media-card-cover-placeholder" style={{ display: item.coverUrl ? 'none' : 'flex' }}>
+                    {typeInfo.icon}
+                </span>
                 <span
                     className="media-card-type-badge"
                     style={{ borderColor: typeInfo.color }}

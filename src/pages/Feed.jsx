@@ -377,7 +377,20 @@ export default function Feed({ onViewDetail }) {
                 </div>
 
                 <div className="activity-body">
-                    <img src={coverUrl} alt={item.title} className="activity-cover" />
+                    {item.coverUrl ? (
+                        <img
+                            src={item.coverUrl}
+                            alt={item.title}
+                            className="activity-cover"
+                            onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                            }}
+                        />
+                    ) : null}
+                    <div className="activity-cover-placeholder" style={{ display: item.coverUrl ? 'none' : 'flex' }}>
+                        {typeInfo.icon}
+                    </div>
                     <div className="activity-info">
                         <h4 className="activity-title">{item.title}</h4>
                         {item.rating > 0 && <StarRating rating={item.rating} readOnly />}
