@@ -6,7 +6,7 @@ import Dashboard from './pages/Dashboard';
 import MediaDetail from './pages/MediaDetail';
 import Stats from './pages/Stats';
 import Feed from './pages/Feed';
-import MyCollection from './pages/MyCollection';
+import Events from './pages/Events'; // Added Events
 import UserProfile from './pages/UserProfile';
 import Login from './pages/Login';
 import { useMedia } from './context/MediaContext';
@@ -124,8 +124,19 @@ export default function App() {
       return <Feed onViewDetail={viewDetail} />;
     }
 
-    if (page === 'my-collection' && isLoggedIn) {
-      return <MyCollection onViewDetail={viewDetail} />;
+    if (page === 'events') {
+      return <Events />;
+    }
+
+    if (page === 'my-profile' && isLoggedIn) {
+      return (
+        <UserProfile
+          userId={user?.uid}
+          userName={profile?.displayName}
+          userAvatar={profile?.avatar}
+          onViewDetail={viewDetail}
+        />
+      );
     }
 
     if (page === 'stats') {

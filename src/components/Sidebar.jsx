@@ -49,10 +49,18 @@ export default function Sidebar({ currentPage, onNavigate, isOpen }) {
                     <span>Akış</span>
                 </div>
 
+                <div
+                    className={`sidebar-link ${currentPage === 'events' ? 'active' : ''}`}
+                    onClick={() => onNavigate('events')}
+                >
+                    <span className="sidebar-link-icon">📅</span>
+                    <span>Etkinlikler</span>
+                </div>
+
                 {isLoggedIn && (
                     <div
-                        className={`sidebar-link ${currentPage === 'my-collection' ? 'active' : ''}`}
-                        onClick={() => onNavigate('my-collection')}
+                        className={`sidebar-link ${currentPage === 'my-profile' ? 'active' : ''}`}
+                        onClick={() => onNavigate('my-profile')}
                     >
                         <span className="sidebar-link-icon">📦</span>
                         <span>Koleksiyonum</span>
