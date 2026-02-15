@@ -76,6 +76,8 @@ export function AuthProvider({ children }) {
                         email: firebaseUser.email,
                         avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)],
                         title: 'Çaylak Üye',
+                        friends: [],
+                        friendRequests: [],
                         createdAt: new Date().toISOString(),
                     };
                     await setDoc(doc(db, 'users', firebaseUser.uid), newProfile);
@@ -105,6 +107,8 @@ export function AuthProvider({ children }) {
             email,
             avatar: avatar || AVATARS[Math.floor(Math.random() * AVATARS.length)],
             title: 'Çaylak Üye',
+            friends: [],
+            friendRequests: [],
             createdAt: new Date().toISOString(),
         };
         await setDoc(doc(db, 'users', cred.user.uid), profileData);
