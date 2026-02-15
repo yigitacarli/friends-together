@@ -8,7 +8,7 @@ import {
     signOut,
     updateProfile,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, updateDoc, collection, onSnapshot, serverTimestamp, arrayUnion } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, collection, onSnapshot, serverTimestamp, arrayUnion } from 'firebase/firestore';
 
 const AuthContext = createContext(null);
 
@@ -107,49 +107,35 @@ export function AuthProvider({ children }) {
 
     // Realtime profile listener — keeps profile in sync with Firestore changes
     // (friend requests, avatar/title edits by others, etc.)
+    // NOT: Profil oluşturma SADECE register() içinde yapılır.
+    // Burada getDoc + setDoc yapmıyoruz çünkü cache/offline sorunlarından
+    // dolayı mevcut profili silip üzerine yazabiliyordu.
     useEffect(() => {
         let unsubProfile = null;
 
-        const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
+        const unsub = onAuthStateChanged(auth, (firebaseUser) => {
             // Unsubscribe from previous profile listener
             if (unsubProfile) { unsubProfile(); unsubProfile = null; }
 
             if (firebaseUser) {
                 setUser(firebaseUser);
 
-                // First check if profile exists
-                try {
-                    const profileSnap = await getDoc(doc(db, 'users', firebaseUser.uid));
-                    if (!profileSnap.exists()) {
-                        // Create profile ONCE for new users
-                        // merge:true yerine normal setDoc — sadece profil yoksa çalışır
-                        const newProfile = {
-                            displayName: firebaseUser.displayName || 'Kullanıcı',
-                            email: firebaseUser.email,
-                            avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)],
-                            title: 'Yeni Üye',
-                            friends: [],
-                            friendRequests: [],
-                            createdAt: new Date().toISOString(),
-                        };
-                        await setDoc(doc(db, 'users', firebaseUser.uid), newProfile);
-                    }
-                } catch (profileErr) {
-                    console.error('Profil kontrol/oluşturma hatası:', profileErr);
-                    // Hata durumunda mevcut profili bozmuyoruz
-                }
-
-                // Now listen to profile changes in real-time
+                // Sadece dinle — profil oluşturmayı register() halleder
                 unsubProfile = onSnapshot(doc(db, 'users', firebaseUser.uid), (snap) => {
                     if (snap.exists()) {
                         setProfile({ id: firebaseUser.uid, ...snap.data() });
+                    } else {
+                        // Profil henüz yok (register sırasında olabilir)
+                        // Burada yeni profil OLUŞTURMUYORUZ — sadece null bırakıyoruz
+                        setProfile(null);
                     }
+                    setLoading(false);
                 });
             } else {
                 setUser(null);
                 setProfile(null);
+                setLoading(false);
             }
-            setLoading(false);
         });
 
         return () => {
