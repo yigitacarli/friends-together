@@ -34,7 +34,7 @@ export default function App() {
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [detailId, setDetailId] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
   const [saving, setSaving] = useState(false);
   const [users, setUsers] = useState([]);
@@ -175,7 +175,7 @@ export default function App() {
   };
 
   return (
-    <div className="app-layout">
+    <div className={`app-layout ${!sidebarOpen ? 'sidebar-closed' : ''}`}>
       <Sidebar
         currentPage={detailId ? '' : page}
         onNavigate={navigate}

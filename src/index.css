@@ -2682,6 +2682,37 @@ textarea {
 
 /* --- RESPONSIVE FIXES --- */
 
+/* Sidebar Toggle for Desktop */
+.sidebar {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-closed .sidebar {
+  transform: translateX(-100%);
+}
+
+.main-area {
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-closed .main-area {
+  margin-left: 0 !important;
+}
+
+.header {
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-closed .header {
+  left: 0 !important;
+}
+
+.mobile-menu-btn {
+  display: flex !important;
+  /* Always show toggle on desktop too */
+  margin-right: 12px;
+}
+
 /* Sidebar Overlay */
 .sidebar-overlay {
   position: fixed;
