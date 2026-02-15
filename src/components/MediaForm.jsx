@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react';
 import { MEDIA_TYPES, STATUS_TYPES, TYPE_EXTRA_FIELDS } from '../services/storage';
 import StarRating from './StarRating';
+import {
+    fetchBookMetadata,
+    fetchMovieSeriesMetadata,
+    mergeTags,
+    toIsoDateOrFallback,
+} from '../services/metadata';
 
 const EMPTY_FORM = {
     title: '',
@@ -24,6 +30,8 @@ const EMPTY_FORM = {
 
 export default function MediaForm({ item, onSave, onClose, saving }) {
     const [form, setForm] = useState(EMPTY_FORM);
+    const [lookupValue, setLookupValue] = useState('');
+    const [lookupLoading, setLookupLoading] = useState(false);
 
     useEffect(() => {
         if (item) {
@@ -65,6 +73,39 @@ export default function MediaForm({ item, onSave, onClose, saving }) {
         });
     };
 
+    const handleAutoFill = async () => {
+        if (!lookupValue.trim()) {
+            alert('Lutfen bir baslik veya baglanti gir.');
+            return;
+        }
+
+        setLookupLoading(true);
+        try {
+            const isBook = form.type === 'book';
+            const metadata = isBook
+                ? await fetchBookMetadata(lookupValue)
+                : await fetchMovieSeriesMetadata(lookupValue, form.type);
+
+            setForm((prev) => ({
+                ...prev,
+                title: metadata.title || prev.title,
+                coverUrl: metadata.coverUrl || prev.coverUrl,
+                date: toIsoDateOrFallback(metadata.date, prev.date),
+                review: metadata.review || prev.review,
+                director: metadata.director || prev.director,
+                author: metadata.author || prev.author,
+                seasonCount: metadata.seasonCount || prev.seasonCount,
+                type: metadata.type || prev.type,
+                tags: mergeTags(prev.tags, metadata.tags),
+            }));
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Bilgi cekilirken bir hata olustu.';
+            alert(message);
+        } finally {
+            setLookupLoading(false);
+        }
+    };
+
     const isEdit = !!item;
 
     return (
@@ -86,6 +127,37 @@ export default function MediaForm({ item, onSave, onClose, saving }) {
                                 required
                                 autoFocus
                             />
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">
+                                {form.type === 'book'
+                                    ? 'Kitap arama (isim veya link)'
+                                    : 'Film/Dizi arama (IMDb linki veya baslik)'}
+                            </label>
+                            <div className="autofill-row">
+                                <input
+                                    type="text"
+                                    value={lookupValue}
+                                    onChange={(e) => setLookupValue(e.target.value)}
+                                    placeholder={form.type === 'book'
+                                        ? 'Orn: Sefiller'
+                                        : 'Orn: https://www.imdb.com/title/tt0111161/'}
+                                />
+                                <button
+                                    type="button"
+                                    className="btn btn-secondary"
+                                    onClick={handleAutoFill}
+                                    disabled={lookupLoading}
+                                >
+                                    {lookupLoading ? 'Cekiliyor...' : 'Otomatik Doldur'}
+                                </button>
+                            </div>
+                            {form.type !== 'book' && (
+                                <p className="form-help">
+                                    IMDb verisi icin OMDb anahtari gerekir: <code>VITE_OMDB_API_KEY</code>
+                                </p>
+                            )}
                         </div>
 
                         <div className="form-row">
@@ -169,19 +241,20 @@ export default function MediaForm({ item, onSave, onClose, saving }) {
 
                         <div className="form-group">
                             <label className="form-label">Kimler Görebilir?</label>
-                            <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
+                            <div className="visibility-options">
                                 {[
                                     { id: 'public', label: '🌍 Herkes', color: '#3b82f6' },
                                     { id: 'friends', label: '👥 Arkadaşlar', color: '#22c55e' },
                                     { id: 'private', label: '🔒 Sadece Ben', color: '#64748b' }
                                 ].map(opt => (
-                                    <label key={opt.id} style={{
-                                        display: 'flex', alignItems: 'center', gap: 6,
-                                        padding: '8px 12px', borderRadius: 8,
-                                        border: `1px solid ${form.visibility === opt.id ? opt.color : 'var(--border)'}`,
-                                        background: form.visibility === opt.id ? `${opt.color}15` : 'transparent',
-                                        cursor: 'pointer', flex: 1, justifyContent: 'center'
-                                    }}>
+                                    <label
+                                        key={opt.id}
+                                        className="visibility-option"
+                                        style={{
+                                            border: `1px solid ${form.visibility === opt.id ? opt.color : 'var(--border)'}`,
+                                            background: form.visibility === opt.id ? `${opt.color}15` : 'transparent',
+                                        }}
+                                    >
                                         <input
                                             type="radio"
                                             name="visibility"
@@ -196,7 +269,7 @@ export default function MediaForm({ item, onSave, onClose, saving }) {
                                     </label>
                                 ))}
                             </div>
-                            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 8 }}>
+                            <p className="form-help">
                                 {form.visibility === 'public' && 'Topluluk sayfasında ve herkesin akışında görünebilir.'}
                                 {form.visibility === 'friends' && 'Sadece arkadaş listenizdekiler görebilir.'}
                                 {form.visibility === 'private' && 'Gizli günlük modunda, sadece siz görebilirsiniz.'}

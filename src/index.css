@@ -1163,6 +1163,40 @@ textarea {
   gap: 12px;
 }
 
+.autofill-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.autofill-row .btn {
+  min-width: 150px;
+  justify-content: center;
+}
+
+.form-help {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
+.visibility-options {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.visibility-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  flex: 1;
+  justify-content: center;
+}
+
 /* --- STATS PAGE --- */
 .stats-page-grid {
   display: grid;
@@ -2903,4 +2937,40 @@ textarea {
 /* Ensure no element can exceed screen width */
 * {
   box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .header-right {
+    gap: 8px;
+  }
+
+  .modal-footer {
+    flex-wrap: wrap;
+  }
+
+  .modal-footer .btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .autofill-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .autofill-row .btn {
+    width: 100%;
+  }
+
+  .visibility-options {
+    flex-direction: column;
+  }
+
+  .comment-input-row {
+    flex-direction: column;
+  }
+
+  .comment-input-row .btn {
+    width: 100%;
+  }
 }

@@ -29,6 +29,7 @@ const LoadingSpinner = () => (
 export default function App() {
   const { add, update, remove } = useMedia();
   const { user, profile, isLoggedIn, isAdmin, loading: authLoading } = useAuth();
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 1024);
   const [page, setPage] = useState('feed');
   const [searchQuery, setSearchQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
@@ -39,6 +40,18 @@ export default function App() {
   const [saving, setSaving] = useState(false);
   const [users, setUsers] = useState([]);
   const [showEditProfile, setShowEditProfile] = useState(false);
+
+  useEffect(() => {
+    const onResize = () => {
+      const mobile = window.innerWidth <= 1024;
+      setIsMobile(mobile);
+      if (!mobile) {
+        setSidebarOpen(true);
+      }
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -183,7 +196,7 @@ export default function App() {
         onToggle={() => setSidebarOpen(o => !o)}
         onEditProfile={() => setShowEditProfile(true)}
       />
-      {sidebarOpen && (
+      {isMobile && sidebarOpen && (
         <div className="sidebar-overlay visible" onClick={() => setSidebarOpen(false)} />
       )}
 
