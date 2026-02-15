@@ -192,6 +192,21 @@ textarea {
   box-shadow: none;
 }
 
+.visibility-icon-static {
+  font-size: 0.85rem;
+  opacity: 0.7;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  cursor: help;
+}
+
+.admin-badge {
+  background: linear-gradient(135deg, #fcd34d, #f59e0b) !important;
+  color: #1f2937 !important;
+  font-weight: 800 !important;
+}
+
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -2546,6 +2561,7 @@ textarea {
   font-size: 1.5rem;
   background: linear-gradient(135deg, #a78bfa 0%, #f472b6 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: -0.5px;
   text-transform: uppercase;

@@ -133,9 +133,12 @@ export default function MediaDetail({ mediaId, onBack, onEdit, onDelete, current
                     <div className="detail-info">
                         <h1 className="detail-title">{item.title}</h1>
 
-                        <div className="detail-meta-row">
+                        <div className="detail-meta-row" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                             <span className={`status-badge ${item.status}`}>
                                 {statusInfo.icon} {statusInfo.label}
+                            </span>
+                            <span className="visibility-icon-static" title={item.visibility === 'public' ? 'Herkes' : item.visibility === 'friends' ? 'Arkadaşlar' : 'Özel'} style={{ fontSize: '1rem', opacity: 0.8 }}>
+                                {item.visibility === 'public' ? '🌍' : item.visibility === 'friends' ? '👥' : '🔒'}
                             </span>
                             {item.rating > 0 && <StarRating rating={item.rating} readOnly size={24} />}
                         </div>

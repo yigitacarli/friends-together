@@ -231,10 +231,10 @@ export default function Feed({ onViewDetail }) {
                         </div>
                         <span className="post-time">
                             {timeAgo(post.createdAt)}
-                            {post.userId === user?.uid && (
+                            {post.userId === user?.uid ? (
                                 <select
                                     className="visibility-mini-select"
-                                    value={post.visibility || 'friends'}
+                                    value={post.visibility || 'public'}
                                     onChange={(e) => handleUpdateVisibility(post, e.target.value)}
                                     onClick={(e) => e.stopPropagation()}
                                 >
@@ -242,6 +242,10 @@ export default function Feed({ onViewDetail }) {
                                     <option value="friends">👥</option>
                                     <option value="private">🔒</option>
                                 </select>
+                            ) : (
+                                <span className="visibility-icon-static" title={post.visibility === 'public' ? 'Herkes' : post.visibility === 'friends' ? 'Arkadaşlar' : 'Özel'}>
+                                    {post.visibility === 'public' ? '🌍' : post.visibility === 'friends' ? '👥' : '🔒'}
+                                </span>
                             )}
                         </span>
                     </div>
@@ -357,10 +361,10 @@ export default function Feed({ onViewDetail }) {
                         </div>
                         <span className="post-time">
                             {statusInfo.label} · {timeAgo(item.createdAt)}
-                            {item.userId === user?.uid && (
+                            {item.userId === user?.uid ? (
                                 <select
                                     className="visibility-mini-select"
-                                    value={item.visibility || 'friends'}
+                                    value={item.visibility || 'public'}
                                     onChange={(e) => handleUpdateVisibility(item, e.target.value)}
                                     onClick={(e) => e.stopPropagation()}
                                 >
@@ -368,6 +372,10 @@ export default function Feed({ onViewDetail }) {
                                     <option value="friends">👥</option>
                                     <option value="private">🔒</option>
                                 </select>
+                            ) : (
+                                <span className="visibility-icon-static" title={item.visibility === 'public' ? 'Herkes' : item.visibility === 'friends' ? 'Arkadaşlar' : 'Özel'}>
+                                    {item.visibility === 'public' ? '🌍' : item.visibility === 'friends' ? '👥' : '🔒'}
+                                </span>
                             )}
                         </span>
                     </div>

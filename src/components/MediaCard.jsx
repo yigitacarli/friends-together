@@ -81,11 +81,9 @@ export default function MediaCard({ item, onClick, view = 'grid' }) {
                 <div className="media-card-meta">
                     <StarRating rating={item.rating} readOnly />
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        {item.userId === user?.uid && (
-                            <span style={{ fontSize: '0.7rem', opacity: 0.6 }}>
-                                {item.visibility === 'public' ? '🌍' : item.visibility === 'private' ? '🔒' : '👥'}
-                            </span>
-                        )}
+                        <span className="visibility-icon-static" style={{ fontSize: '0.7rem', opacity: 0.6 }} title={item.visibility === 'public' ? 'Herkes' : item.visibility === 'friends' ? 'Arkadaşlar' : 'Özel'}>
+                            {item.visibility === 'public' ? '🌍' : item.visibility === 'private' ? '🔒' : '👥'}
+                        </span>
                         <span
                             className="media-card-status-inline"
                             style={{ color: statusInfo.color, fontSize: '0.72rem', fontWeight: 600 }}
