@@ -67,6 +67,7 @@ export default function MediaList({ type, searchQuery, onViewDetail }) {
         series: 'Diziler',
         anime: 'Animeler',
         music: 'Müzikler',
+        software: 'Yazılım',
     };
 
     const pageTitle = type ? `${typeInfo?.icon || ''} ${LABELS[type] || type}` : '📖 Tüm Medyalar';

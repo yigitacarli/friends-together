@@ -3,11 +3,14 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { MediaProvider } from './context/MediaContext.jsx'
+import { AuthProvider } from './context/AuthContext.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <MediaProvider>
-      <App />
-    </MediaProvider>
+    <AuthProvider>
+      <MediaProvider>
+        <App />
+      </MediaProvider>
+    </AuthProvider>
   </StrictMode>,
 )

@@ -47,23 +47,22 @@ export default function MediaCard({ item, onClick, view = 'grid' }) {
                 >
                     {typeInfo.icon} {typeInfo.label}
                 </span>
-                <span
-                    className="media-card-status-badge"
-                    style={{ background: statusInfo.bg, color: statusInfo.color }}
-                >
-                    {statusInfo.label}
-                </span>
             </div>
             <div className="media-card-body">
                 <div className="media-card-title">{item.title}</div>
                 {subtitle && (
-                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {subtitle}
                     </div>
                 )}
                 <div className="media-card-meta">
                     <StarRating rating={item.rating} readOnly />
-                    <span className="media-card-date">{item.date || ''}</span>
+                    <span
+                        className="media-card-status-inline"
+                        style={{ color: statusInfo.color, fontSize: '0.72rem', fontWeight: 600 }}
+                    >
+                        {statusInfo.label}
+                    </span>
                 </div>
             </div>
         </div>

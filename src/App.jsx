@@ -2,18 +2,22 @@ import { useState, useCallback } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import MediaForm from './components/MediaForm';
+import LoginModal from './components/LoginModal';
 import Dashboard from './pages/Dashboard';
 import MediaList from './pages/MediaList';
 import MediaDetail from './pages/MediaDetail';
 import Stats from './pages/Stats';
 import { useMedia } from './context/MediaContext';
+import { useAuth } from './context/AuthContext';
 import { MEDIA_TYPES } from './services/storage';
 
 export default function App() {
   const { add, update, remove } = useMedia();
+  const { isAdmin } = useAuth();
   const [page, setPage] = useState('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [detailId, setDetailId] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -24,6 +28,7 @@ export default function App() {
     setPage(p);
     setDetailId(null);
     setSearchQuery('');
+    setSidebarOpen(false);
   }, []);
 
   const viewDetail = useCallback((id) => {
@@ -49,11 +54,19 @@ export default function App() {
   };
 
   const handleEdit = (item) => {
+    if (!isAdmin) {
+      setShowLogin(true);
+      return;
+    }
     setEditItem(item);
     setShowForm(true);
   };
 
   const handleDelete = (id) => {
+    if (!isAdmin) {
+      setShowLogin(true);
+      return;
+    }
     setShowDeleteConfirm(id);
   };
 
@@ -71,6 +84,10 @@ export default function App() {
   };
 
   const handleAddClick = () => {
+    if (!isAdmin) {
+      setShowLogin(true);
+      return;
+    }
     setEditItem(null);
     setShowForm(true);
   };
@@ -83,6 +100,7 @@ export default function App() {
           onBack={() => setDetailId(null)}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          isAdmin={isAdmin}
         />
       );
     }
@@ -116,6 +134,9 @@ export default function App() {
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(o => !o)}
       />
+      {sidebarOpen && (
+        <div className="sidebar-overlay visible" onClick={() => setSidebarOpen(false)} />
+      )}
 
       <div className="main-area">
         <Header
@@ -123,6 +144,7 @@ export default function App() {
           onSearchChange={setSearchQuery}
           onAddClick={handleAddClick}
           onMenuToggle={() => setSidebarOpen(o => !o)}
+          onLoginClick={() => setShowLogin(true)}
         />
 
         <main className="page-content">
@@ -136,6 +158,13 @@ export default function App() {
           onSave={handleSave}
           onClose={() => { setShowForm(false); setEditItem(null); }}
           saving={saving}
+        />
+      )}
+
+      {showLogin && (
+        <LoginModal
+          onClose={() => setShowLogin(false)}
+          onSuccess={() => setShowLogin(false)}
         />
       )}
 

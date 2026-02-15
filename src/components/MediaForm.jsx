@@ -17,6 +17,8 @@ const EMPTY_FORM = {
     seasonCount: '',
     studio: '',
     artist: '',
+    techStack: '',
+    githubUrl: '',
 };
 
 export default function MediaForm({ item, onSave, onClose, saving }) {
@@ -39,6 +41,8 @@ export default function MediaForm({ item, onSave, onClose, saving }) {
                 seasonCount: item.seasonCount || '',
                 studio: item.studio || '',
                 artist: item.artist || '',
+                techStack: item.techStack || '',
+                githubUrl: item.githubUrl || '',
             });
         }
     }, [item]);

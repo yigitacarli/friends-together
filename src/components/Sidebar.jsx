@@ -9,6 +9,7 @@ const LABELS = {
     series: 'Diziler',
     anime: 'Animeler',
     music: 'Müzikler',
+    software: 'Yazılım',
 };
 
 export default function Sidebar({ currentPage, onNavigate, isOpen, onToggle }) {

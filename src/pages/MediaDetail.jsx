@@ -2,7 +2,7 @@ import { useMedia } from '../context/MediaContext';
 import { MEDIA_TYPES, STATUS_TYPES, TYPE_EXTRA_FIELDS } from '../services/storage';
 import StarRating from '../components/StarRating';
 
-export default function MediaDetail({ mediaId, onBack, onEdit, onDelete }) {
+export default function MediaDetail({ mediaId, onBack, onEdit, onDelete, isAdmin }) {
     const { getById, loading } = useMedia();
     const item = getById(mediaId);
 
@@ -90,14 +90,16 @@ export default function MediaDetail({ mediaId, onBack, onEdit, onDelete }) {
                         </div>
                     )}
 
-                    <div className="detail-actions">
-                        <button className="btn btn-secondary" onClick={() => onEdit(item)}>
-                            ✏️ Düzenle
-                        </button>
-                        <button className="btn btn-danger" onClick={() => onDelete(item.id)}>
-                            🗑️ Sil
-                        </button>
-                    </div>
+                    {isAdmin && (
+                        <div className="detail-actions">
+                            <button className="btn btn-secondary" onClick={() => onEdit(item)}>
+                                ✏️ Düzenle
+                            </button>
+                            <button className="btn btn-danger" onClick={() => onDelete(item.id)}>
+                                🗑️ Sil
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 

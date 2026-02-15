@@ -52,6 +52,8 @@ export async function addMedia(item) {
         seasonCount: item.seasonCount || '',
         studio: item.studio || '',
         artist: item.artist || '',
+        techStack: item.techStack || '',
+        githubUrl: item.githubUrl || '',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
     };
@@ -79,6 +81,7 @@ export const MEDIA_TYPES = {
     series: { label: 'Dizi', icon: '📺', color: 'var(--color-series)' },
     anime: { label: 'Anime', icon: '🌸', color: 'var(--color-anime)' },
     music: { label: 'Müzik', icon: '🎵', color: 'var(--color-music)' },
+    software: { label: 'Yazılım', icon: '💻', color: 'var(--color-software)' },
 };
 
 export const STATUS_TYPES = {
@@ -95,4 +98,8 @@ export const TYPE_EXTRA_FIELDS = {
     series: [{ key: 'seasonCount', label: 'Sezon', placeholder: 'Sezon sayısı...', icon: '📋' }],
     anime: [{ key: 'studio', label: 'Stüdyo', placeholder: 'Animasyon stüdyosu...', icon: '🏢' }],
     music: [{ key: 'artist', label: 'Sanatçı', placeholder: 'Sanatçı / grup adı...', icon: '🎤' }],
+    software: [
+        { key: 'techStack', label: 'Teknoloji', placeholder: 'React, Flutter, Python...', icon: '⚙️' },
+        { key: 'githubUrl', label: 'GitHub', placeholder: 'https://github.com/...', icon: '🔗' },
+    ],
 };

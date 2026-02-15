@@ -1,8 +1,12 @@
-export default function Header({ searchQuery, onSearchChange, onAddClick, onMenuToggle }) {
+import { useAuth } from '../context/AuthContext';
+
+export default function Header({ searchQuery, onSearchChange, onAddClick, onMenuToggle, onLoginClick }) {
+    const { isAdmin, logout } = useAuth();
+
     return (
         <header className="header">
             <div className="header-left">
-                <button className="btn-icon" onClick={onMenuToggle} style={{ display: 'none' }}>
+                <button className="btn-icon mobile-menu-btn" onClick={onMenuToggle} style={{ display: 'none' }}>
                     ☰
                 </button>
                 <div className="header-search">
@@ -16,10 +20,22 @@ export default function Header({ searchQuery, onSearchChange, onAddClick, onMenu
                 </div>
             </div>
             <div className="header-right">
-                <button className="btn btn-primary" onClick={onAddClick}>
-                    <span>+</span>
-                    <span>Yeni Ekle</span>
-                </button>
+                {isAdmin ? (
+                    <>
+                        <button className="btn btn-primary" onClick={onAddClick}>
+                            <span>+</span>
+                            <span>Yeni Ekle</span>
+                        </button>
+                        <button className="btn btn-secondary" onClick={logout} title="Çıkış Yap">
+                            🚪
+                        </button>
+                    </>
+                ) : (
+                    <button className="btn btn-secondary" onClick={onLoginClick}>
+                        <span>🔐</span>
+                        <span>Giriş</span>
+                    </button>
+                )}
             </div>
         </header>
     );
