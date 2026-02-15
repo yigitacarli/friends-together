@@ -1,5 +1,4 @@
 import { useState, useCallback, useEffect, Suspense, lazy } from 'react';
-// Force re-deploy to fix github.io redirection cache issues
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import MediaForm from './components/MediaForm';
@@ -18,6 +17,7 @@ const Lobby = lazy(() => import('./pages/Lobby'));
 const UserProfile = lazy(() => import('./pages/UserProfile'));
 const Login = lazy(() => import('./pages/Login'));
 const Community = lazy(() => import('./pages/Community'));
+const AdminPanel = lazy(() => import('./pages/AdminPanel'));
 
 const LoadingSpinner = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh', color: 'var(--text-muted)' }}>
@@ -63,8 +63,8 @@ export default function App() {
     setPage(p);
     setDetailId(null);
     setSearchQuery('');
-    setSidebarOpen(false);
-  }, []);
+    if (isMobile) setSidebarOpen(false);
+  }, [isMobile]);
 
   const viewDetail = useCallback((id) => {
     setDetailId(id);
@@ -152,12 +152,13 @@ export default function App() {
       );
     }
 
-    if (page === 'feed') return <Feed onViewDetail={viewDetail} />;
+    if (page === 'feed') return <Feed onViewDetail={viewDetail} onNavigate={navigate} />;
     if (page === 'events') return <Events />;
     if (page === 'lobby') return <Lobby />;
     if (page === 'stats') return <Stats />;
     if (page === 'community') return <Community onNavigate={navigate} />;
     if (page === 'dashboard') return <Dashboard onNavigate={navigate} onViewDetail={viewDetail} />;
+    if (page === 'admin' && isAdmin) return <AdminPanel onNavigate={navigate} />;
 
     if (page === 'my-profile' && isLoggedIn) {
       return (
@@ -184,7 +185,7 @@ export default function App() {
       );
     }
 
-    return <Feed onViewDetail={viewDetail} />;
+    return <Feed onViewDetail={viewDetail} onNavigate={navigate} />;
   };
 
   return (
@@ -211,14 +212,55 @@ export default function App() {
           onMenuToggle={() => setSidebarOpen(o => !o)}
           isGuest={false}
           onLoginClick={() => { }}
+          onLogoClick={() => navigate('feed')}
         />
 
-        <main className="page-content">
+        <main className="page-content" style={isMobile ? { paddingBottom: 80 } : {}}>
           <Suspense fallback={<LoadingSpinner />}>
             {renderPage()}
           </Suspense>
         </main>
       </div>
+
+      {/* Bottom Navigation for Mobile */}
+      {isMobile && isLoggedIn && !detailId && (
+        <nav className="bottom-nav">
+          <button
+            className={`bottom-nav-item ${page === 'feed' ? 'active' : ''}`}
+            onClick={() => navigate('feed')}
+          >
+            <span className="bottom-nav-icon">🏠</span>
+            <span className="bottom-nav-label">Akış</span>
+          </button>
+          <button
+            className={`bottom-nav-item ${page === 'community' ? 'active' : ''}`}
+            onClick={() => navigate('community')}
+          >
+            <span className="bottom-nav-icon">🌐</span>
+            <span className="bottom-nav-label">Topluluk</span>
+          </button>
+          <button
+            className="bottom-nav-item bottom-nav-add"
+            onClick={() => { setEditItem(null); setShowForm(true); }}
+          >
+            <span className="bottom-nav-add-icon">+</span>
+          </button>
+          <button
+            className={`bottom-nav-item ${page === 'lobby' ? 'active' : ''}`}
+            onClick={() => navigate('lobby')}
+          >
+            <span className="bottom-nav-icon">💬</span>
+            <span className="bottom-nav-label">Meydan</span>
+          </button>
+          <button
+            className={`bottom-nav-item ${page === 'my-profile' ? 'active' : ''}`}
+            onClick={() => navigate('my-profile')}
+          >
+            <span className="bottom-nav-icon">{profile?.avatar || '🧑‍💻'}</span>
+            <span className="bottom-nav-label">Profil</span>
+          </button>
+        </nav>
+      )}
 
       {showForm && isLoggedIn && (
         <MediaForm

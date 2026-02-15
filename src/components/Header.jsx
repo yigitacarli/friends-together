@@ -1,7 +1,7 @@
 import { useAuth } from '../context/AuthContext';
 import Notifications from './Notifications';
 
-export default function Header({ searchQuery, onSearchChange, onAddClick, onMenuToggle, isGuest, onLoginClick }) {
+export default function Header({ searchQuery, onSearchChange, onAddClick, onMenuToggle, isGuest, onLoginClick, onLogoClick }) {
     const { logout, profile, isLoggedIn } = useAuth();
 
     return (
@@ -12,7 +12,7 @@ export default function Header({ searchQuery, onSearchChange, onAddClick, onMenu
                 </button>
             </div>
 
-            <div className="app-logo-text">Friends Together</div>
+            <div className="app-logo-text" onClick={onLogoClick} style={{ cursor: 'pointer' }}>Friends Together</div>
 
             <div className="header-right">
                 {isLoggedIn ? (

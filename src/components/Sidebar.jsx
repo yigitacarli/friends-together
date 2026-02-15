@@ -5,7 +5,7 @@ import { getAllUsers } from '../services/storage';
 
 export default function Sidebar({ currentPage, onNavigate, isOpen, onEditProfile }) {
     const { items } = useMedia();
-    const { user, profile, isLoggedIn, isOnline, getUser } = useAuth();
+    const { user, profile, isLoggedIn, isOnline, getUser, isAdmin } = useAuth();
     const [users, setUsers] = useState([]);
 
     useEffect(() => {
@@ -95,6 +95,17 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onEditProfile
                     <span className="sidebar-link-icon">📊</span>
                     <span>İstatistikler</span>
                 </div>
+
+                {isAdmin && (
+                    <div
+                        className={`sidebar-link ${currentPage === 'admin' ? 'active' : ''}`}
+                        onClick={() => onNavigate('admin')}
+                        style={{ borderTop: '1px solid var(--border)', marginTop: 8, paddingTop: 12 }}
+                    >
+                        <span className="sidebar-link-icon">👑</span>
+                        <span style={{ background: 'linear-gradient(135deg, #fcd34d, #f59e0b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 700 }}>Admin Paneli</span>
+                    </div>
+                )}
 
                 {members.length > 0 && (
                     <>

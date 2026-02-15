@@ -31,7 +31,7 @@ const POST_TYPES = {
     quote: { label: 'Alıntı', icon: '💬', color: '#34d399' }
 };
 
-export default function Feed({ onViewDetail }) {
+export default function Feed({ onViewDetail, onNavigate }) {
     const { user, profile, isLoggedIn, isAdmin, getUser } = useAuth();
     const { items: mediaItems, update: updateMediaItem } = useMedia();
     const [posts, setPosts] = useState([]);
@@ -221,10 +221,10 @@ export default function Feed({ onViewDetail }) {
         return (
             <div key={`post-${post.id}`} className="post-card">
                 <div className="post-header">
-                    <span className="feed-avatar">{avatar}</span>
+                    <span className="feed-avatar clickable-profile" onClick={() => onNavigate?.(post.userId === user?.uid ? 'my-profile' : `user-${post.userId}`)}>{avatar}</span>
                     <div className="post-header-info">
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <span className="post-author">{displayName}</span>
+                            <span className="post-author clickable-profile" onClick={() => onNavigate?.(post.userId === user?.uid ? 'my-profile' : `user-${post.userId}`)}>{displayName}</span>
                             <span className={`user-profile-title-badge ${isAdminUser ? 'admin-badge' : ''}`} style={{ fontSize: '0.6rem', padding: '2px 6px', marginTop: 0 }}>{title}</span>
                         </div>
                         <span className="post-time">
@@ -351,10 +351,10 @@ export default function Feed({ onViewDetail }) {
         return (
             <div key={`media-${item.id}`} className="activity-card" onClick={() => onViewDetail?.(item.id)}>
                 <div className="post-header">
-                    <span className="feed-avatar">{avatar}</span>
+                    <span className="feed-avatar clickable-profile" onClick={(e) => { e.stopPropagation(); onNavigate?.(item.userId === user?.uid ? 'my-profile' : `user-${item.userId}`); }}>{avatar}</span>
                     <div className="post-header-info">
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <span className="post-author">{displayName}</span>
+                            <span className="post-author clickable-profile" onClick={(e) => { e.stopPropagation(); onNavigate?.(item.userId === user?.uid ? 'my-profile' : `user-${item.userId}`); }}>{displayName}</span>
                             <span className={`user-profile-title-badge ${isAdminUser ? 'admin-badge' : ''}`} style={{ fontSize: '0.6rem', padding: '2px 6px', marginTop: 0 }}>{title}</span>
                         </div>
                         <span className="post-time">

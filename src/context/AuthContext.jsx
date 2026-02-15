@@ -8,7 +8,7 @@ import {
     signOut,
     updateProfile,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, updateDoc, collection, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, collection, onSnapshot, serverTimestamp, arrayUnion } from 'firebase/firestore';
 
 const AuthContext = createContext(null);
 
@@ -29,6 +29,10 @@ const FUNNY_TITLES = [
 const INVITE_CODE = 'TRACKER2026';
 // ──────────────────────────────────────────────────────
 
+// ─── ADMİN E-POSTASI (herkesle otomatik arkadaş) ────
+const ADMIN_EMAIL = 'acarliyigit@gmail.com';
+// ──────────────────────────────────────────────────────
+
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [profile, setProfile] = useState(null);
@@ -44,6 +48,44 @@ export function AuthProvider({ children }) {
         });
         return unsub;
     }, []);
+
+    // ─── Admin ile otomatik arkadaşlık ───────────────────
+    useEffect(() => {
+        if (!user || !profile) return;
+        // Admin kendisiyle arkadaş olmaya çalışmasın
+        if (user.email === ADMIN_EMAIL) {
+            // Admin hesabı: tüm kullanıcılarla arkadaş ol
+            const ensureAllFriends = async () => {
+                const otherUsers = Object.keys(allUsers).filter(uid => uid !== user.uid);
+                const myFriends = profile.friends || [];
+                const missingFriends = otherUsers.filter(uid => !myFriends.includes(uid));
+                if (missingFriends.length === 0) return;
+                try {
+                    const myRef = doc(db, 'users', user.uid);
+                    for (const uid of missingFriends) {
+                        await updateDoc(myRef, { friends: arrayUnion(uid) });
+                        await updateDoc(doc(db, 'users', uid), { friends: arrayUnion(user.uid) });
+                    }
+                } catch (e) { console.error('Admin auto-friend error:', e); }
+            };
+            ensureAllFriends();
+            return;
+        }
+
+        // Normal kullanıcı: admin ile arkadaş ol
+        const adminEntry = Object.entries(allUsers).find(([_, u]) => u.email === ADMIN_EMAIL);
+        if (!adminEntry) return;
+        const [adminUid] = adminEntry;
+        if (profile.friends?.includes(adminUid)) return;
+
+        const addAdminFriend = async () => {
+            try {
+                await updateDoc(doc(db, 'users', user.uid), { friends: arrayUnion(adminUid) });
+                await updateDoc(doc(db, 'users', adminUid), { friends: arrayUnion(user.uid) });
+            } catch (e) { console.error('Auto-friend with admin error:', e); }
+        };
+        addAdminFriend();
+    }, [user, profile, allUsers]);
 
     // Heartbeat for presence (every 2 mins)
     useEffect(() => {
