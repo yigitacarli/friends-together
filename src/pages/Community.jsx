@@ -69,19 +69,25 @@ export default function Community({ onNavigate }) {
 
                     let actionBtn = null;
                     if (status === 'none') {
+                        // Green 'Arkadaş Ekle' button aligned left (under name)
                         actionBtn = (
                             <button
-                                className="btn btn-primary"
+                                className="btn"
                                 onClick={(e) => { e.stopPropagation(); handleSend(u.id); }}
                                 disabled={actionLoading === u.id}
                                 style={{
-                                    width: 48, height: 48, borderRadius: '50%', padding: 0,
-                                    fontSize: '1.4rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    flexShrink: 0
+                                    background: '#16a34a', // Green
+                                    color: 'white',
+                                    padding: '6px 16px',
+                                    fontSize: '0.85rem',
+                                    fontWeight: 600,
+                                    borderRadius: '8px',
+                                    alignSelf: 'flex-start', // Left align in flex column
+                                    marginTop: 4,
+                                    boxShadow: '0 2px 4px rgba(22, 163, 74, 0.3)'
                                 }}
-                                title="Arkadaş Ekle"
                             >
-                                {actionLoading === u.id ? '...' : '➕'}
+                                {actionLoading === u.id ? 'İşleniyor...' : 'Arkadaş Ekle'}
                             </button>
                         );
                     } else if (status === 'sent') {
@@ -91,25 +97,20 @@ export default function Community({ onNavigate }) {
                                 onClick={(e) => { e.stopPropagation(); handleCancel(u.id); }}
                                 disabled={actionLoading === u.id}
                                 style={{
-                                    width: 48, height: 48, borderRadius: '50%', padding: 0,
-                                    fontSize: '1.2rem', color: 'var(--text-muted)', border: '2px solid var(--border)',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    flexShrink: 0
+                                    padding: '6px 12px', fontSize: '0.8rem', alignSelf: 'flex-start', marginTop: 4
                                 }}
-                                title="İsteği İptal Et (Bekliyor)"
                             >
-                                {actionLoading === u.id ? '...' : '⏳'}
+                                {actionLoading === u.id ? '...' : 'İsteği İptal Et'}
                             </button>
                         );
                     } else if (status === 'friends') {
                         actionBtn = (
                             <div style={{
-                                width: 48, height: 48, borderRadius: '50%',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                background: 'var(--bg-secondary)', color: 'var(--accent-success)',
-                                fontSize: '1.5rem', flexShrink: 0
-                            }} title="Arkadaşsınız">
-                                🤝
+                                alignSelf: 'flex-start', marginTop: 4,
+                                fontSize: '0.85rem', color: 'var(--accent-success)', fontWeight: 600,
+                                display: 'flex', alignItems: 'center', gap: 4
+                            }}>
+                                🤝 Arkadaşsınız
                             </div>
                         );
                     } else if (status === 'received') {
@@ -117,15 +118,9 @@ export default function Community({ onNavigate }) {
                             <button
                                 className="btn btn-primary"
                                 onClick={(e) => { e.stopPropagation(); onNavigate(`user-${u.id}`); }}
-                                style={{
-                                    width: 48, height: 48, borderRadius: '50%', padding: 0,
-                                    fontSize: '1.4rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    background: 'var(--accent-primary)', color: 'white',
-                                    flexShrink: 0, animation: 'pulse 2s infinite'
-                                }}
-                                title="İstek Var"
+                                style={{ alignSelf: 'flex-start', marginTop: 4, padding: '6px 16px' }}
                             >
-                                📩
+                                📩 İsteği Gör
                             </button>
                         );
                     }
@@ -135,7 +130,7 @@ export default function Community({ onNavigate }) {
                             onClick={() => onNavigate(`user-${u.id}`)}
                             style={{
                                 flexDirection: 'row',
-                                alignItems: 'center',
+                                alignItems: 'flex-start', // Align top
                                 gap: 16,
                                 padding: '16px 20px',
                                 cursor: 'pointer',
@@ -150,24 +145,27 @@ export default function Community({ onNavigate }) {
                                 e.currentTarget.style.boxShadow = 'none';
                             }}
                         >
-                            {/* LEFT: Action Button */}
-                            <div onClick={e => e.stopPropagation()}>
-                                {actionBtn}
-                            </div>
+                            {/* Avatar (Left) */}
+                            <span className="feed-avatar" style={{ fontSize: '2rem', width: 60, height: 60, flexShrink: 0 }}>{u.avatar || '🧑‍💻'}</span>
 
-                            {/* MIDDLE: Avatar + Info */}
-                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 16 }}>
-                                <span className="feed-avatar" style={{ fontSize: '2rem', width: 60, height: 60 }}>{u.avatar || '🧑‍💻'}</span>
-                                <div>
-                                    <div style={{ fontWeight: 700, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                                        {u.displayName}
-                                        <span className={`user-profile-title-badge ${isAdminUser ? 'admin-badge' : ''}`} style={{ fontSize: '0.65rem', padding: '2px 6px', marginTop: 0 }}>
-                                            {isAdminUser ? '👑 Admin' : (u.title || 'Çaylak Üye')}
-                                        </span>
-                                    </div>
-                                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: 4 }}>
-                                        Katılım: {joinDate}
-                                    </div>
+                            {/* Middle: Info & Button */}
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                {/* Name Loop */}
+                                <div style={{ fontWeight: 700, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                    {u.displayName}
+                                    <span className={`user-profile-title-badge ${isAdminUser ? 'admin-badge' : ''}`} style={{ fontSize: '0.65rem', padding: '2px 6px', marginTop: 0 }}>
+                                        {isAdminUser ? '👑 Admin' : (u.title || 'Çaylak Üye')}
+                                    </span>
+                                </div>
+
+                                {/* Join Date */}
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                    Katılım: {joinDate}
+                                </div>
+
+                                {/* Action Button (Under name/date, aligned left) */}
+                                <div onClick={e => e.stopPropagation()} style={{ marginTop: 4 }}>
+                                    {actionBtn}
                                 </div>
                             </div>
                         </div>
