@@ -1,16 +1,79 @@
-# React + Vite
+# 🌍 Friends Together - Sosyal Medya Takip Platformu
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Friends Together**, arkadaşlarınla film, dizi, kitap ve oyun deneyimlerini paylaşabileceğin, modern ve güvenli bir sosyal ağdır. Ne izlediğini, ne okuduğunu takip et, incelemelerini yaz ve arkadaşlarının neler yaptığını keşfet!
 
-Currently, two official plugins are available:
+🌐 **Canlı Site:** [friendstogether.com.tr](https://friendstogether.com.tr)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## ✨ Özellikler
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 👥 Sosyal Etkileşim
+*   **Arkadaşlık Sistemi:** İstek gönder, kabul et veya reddet.
+*   **Topluluk:** Siteye kayıtlı herkesi gör, profillerini ziyaret et.
+*   **Özel Akış (Feed):** Sadece arkadaşlarının paylaşımlarını gör.
+*   **Yorumlar:** Arkadaşlarının incelemelerine yorum yap (Gizlilik korumalı!).
 
-## Expanding the ESLint configuration
+### 🎬 Medya Takibi
+*   **4 Kategori:** Film, Dizi, Kitap, Oyun.
+*   **Durum Yönetimi:** İzleniyor, Tamamlandı, İstek Listesi, Yarım Bırakıldı.
+*   **Detaylı İnceleme:** Puan ver, yorum yaz, favorilerine ekle.
+*   **İstatistikler:** Hangi kategoride ne kadar içerik tükettiğini gör.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 🛡️ Güvenlik ve Yetkilendirme
+*   **Invite-Only:** Sadece davet kodu ile üye olunabilir.
+*   **Rol Yönetimi:** Yöneticiler (Admin) özel yetkilere sahiptir.
+*   **İçerik Gizliliği:** Arkadaşın olmayanlar senin profiline yorum yapamaz.
+
+---
+
+## 🚀 Kurulum (Geliştirici)
+
+Projeyi yerel ortamda çalıştırmak için:
+
+1.  **Repoyu Klonla:**
+    ```bash
+    git clone https://github.com/yigitacarli/friends-together.git
+    cd friends-together
+    ```
+
+2.  **Bağımlılıkları Yükle:**
+    ```bash
+    npm install
+    # veya
+    pnpm install
+    ```
+
+3.  **Çevresel Değişkenler (.env):**
+    Proje kök dizininde `.env` dosyası oluştur ve Firebase yapılandırma bilgilerini gir:
+    ```env
+    VITE_FIREBASE_API_KEY=YOUR_API_KEY
+    VITE_FIREBASE_AUTH_DOMAIN=YOUR_AUTH_DOMAIN
+    VITE_FIREBASE_PROJECT_ID=YOUR_PROJECT_ID
+    ...
+    ```
+
+4.  **Başlat:**
+    ```bash
+    npm run dev
+    ```
+
+---
+
+## 🛠️ Teknolojiler
+
+*   **Frontend:** React, Vite
+*   **Backend / Database:** Firebase (Firestore, Auth)
+*   **Stil:** Modern CSS3, Responsive Tasarım, Animasyonlar
+*   **Deploy:** GitHub Pages + Custom Domain
+
+---
+
+## 👑 Yönetim
+
+*   **Kurucu:** Yiğit Acarli
+*   **İletişim:** acarliyigit@gmail.com
+
+---
+
+© 2026 Friends Together. Tüm hakları saklıdır.
