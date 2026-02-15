@@ -6,9 +6,11 @@ import Dashboard from './pages/Dashboard';
 import MediaDetail from './pages/MediaDetail';
 import Stats from './pages/Stats';
 import Feed from './pages/Feed';
-import Events from './pages/Events'; // Added Events
+import Events from './pages/Events';
+import Lobby from './pages/Lobby'; // New
 import UserProfile from './pages/UserProfile';
 import Login from './pages/Login';
+import EditProfileModal from './components/EditProfileModal'; // New
 import { useMedia } from './context/MediaContext';
 import { useAuth } from './context/AuthContext';
 import { getAllUsers } from './services/storage';
@@ -26,6 +28,7 @@ export default function App() {
   const [saving, setSaving] = useState(false);
   const [users, setUsers] = useState([]);
   const [guestMode, setGuestMode] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false); // Modal state
 
   useEffect(() => {
     getAllUsers().then(setUsers);
@@ -96,8 +99,8 @@ export default function App() {
     return (
       <div className="login-page">
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '3rem', animation: 'float 2s ease infinite' }}>📋</div>
-          <p style={{ color: 'var(--text-muted)', marginTop: 16 }}>Yükleniyor...</p>
+          <div style={{ fontSize: '3rem', animation: 'float 2s ease infinite' }}>✨</div>
+          <p style={{ color: 'var(--text-muted)', marginTop: 16 }}>Friends Together...</p>
         </div>
       </div>
     );
@@ -120,13 +123,11 @@ export default function App() {
       );
     }
 
-    if (page === 'feed') {
-      return <Feed onViewDetail={viewDetail} />;
-    }
-
-    if (page === 'events') {
-      return <Events />;
-    }
+    if (page === 'feed') return <Feed onViewDetail={viewDetail} />;
+    if (page === 'events') return <Events />;
+    if (page === 'lobby') return <Lobby />;
+    if (page === 'stats') return <Stats />;
+    if (page === 'dashboard') return <Dashboard onNavigate={navigate} onViewDetail={viewDetail} />;
 
     if (page === 'my-profile' && isLoggedIn) {
       return (
@@ -137,14 +138,6 @@ export default function App() {
           onViewDetail={viewDetail}
         />
       );
-    }
-
-    if (page === 'stats') {
-      return <Stats />;
-    }
-
-    if (page === 'dashboard') {
-      return <Dashboard onNavigate={navigate} onViewDetail={viewDetail} />;
     }
 
     // user-{userId} pages
@@ -171,6 +164,7 @@ export default function App() {
         onNavigate={navigate}
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(o => !o)}
+        onEditProfile={() => setShowEditProfile(true)} // Pass trigger
       />
       {sidebarOpen && (
         <div className="sidebar-overlay visible" onClick={() => setSidebarOpen(false)} />
@@ -202,6 +196,10 @@ export default function App() {
           onClose={() => { setShowForm(false); setEditItem(null); }}
           saving={saving}
         />
+      )}
+
+      {showEditProfile && (
+        <EditProfileModal onClose={() => setShowEditProfile(false)} />
       )}
 
       {showDeleteConfirm && (

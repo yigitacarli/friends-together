@@ -3,14 +3,14 @@ import { useMedia } from '../context/MediaContext';
 import { useAuth } from '../context/AuthContext';
 import { getAllUsers } from '../services/storage';
 
-export default function Sidebar({ currentPage, onNavigate, isOpen }) {
+export default function Sidebar({ currentPage, onNavigate, isOpen, onEditProfile }) { // add onEditProfile prop
     const { items } = useMedia();
     const { user, profile, isLoggedIn } = useAuth();
     const [users, setUsers] = useState([]);
 
     useEffect(() => {
         getAllUsers().then(setUsers);
-    }, []);
+    }, [items, user]); // reload users if items change (active status maybe?)
 
     const otherUsers = users.filter(u => u.id !== user?.uid);
     const myCount = isLoggedIn ? items.filter(i => i.userId === user?.uid).length : 0;
@@ -19,10 +19,13 @@ export default function Sidebar({ currentPage, onNavigate, isOpen }) {
         <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
             {/* User info */}
             {profile ? (
-                <div className="sidebar-user" onClick={() => onNavigate('my-profile')}>
-                    <span className="sidebar-user-avatar">{profile.avatar}</span>
+                <div className="sidebar-user">
+                    <span className="sidebar-user-avatar" onClick={() => onNavigate('my-profile')}>{profile.avatar}</span>
                     <div className="sidebar-user-info">
-                        <span className="sidebar-user-name">{profile.displayName}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span className="sidebar-user-name" onClick={() => onNavigate('my-profile')}>{profile.displayName}</span>
+                            <button className="sidebar-edit-icon" onClick={onEditProfile} title="Profili Düzenle">⚙️</button>
+                        </div>
                         <span className="sidebar-user-email" style={{ color: 'var(--accent-primary)', fontWeight: 500 }}>
                             {profile.title || 'Çaylak Üye'}
                         </span>
@@ -55,6 +58,14 @@ export default function Sidebar({ currentPage, onNavigate, isOpen }) {
                 >
                     <span className="sidebar-link-icon">📅</span>
                     <span>Etkinlikler</span>
+                </div>
+
+                <div
+                    className={`sidebar-link ${currentPage === 'lobby' ? 'active' : ''}`}
+                    onClick={() => onNavigate('lobby')}
+                >
+                    <span className="sidebar-link-icon">💬</span>
+                    <span>Meydan (Chat)</span>
                 </div>
 
                 {isLoggedIn && (
