@@ -12,6 +12,7 @@ import {
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { memberPath } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import type { Member } from "@/types/feed";
 
@@ -44,7 +45,7 @@ type NavProps = {
 
 function isActive(activePath: string, href: string): boolean {
   if (href === "/") {
-    return activePath === "/" || activePath.startsWith("/posts/");
+    return activePath === "/" || activePath === "/post";
   }
   return activePath.startsWith(href);
 }
@@ -103,7 +104,7 @@ export function Nav({ currentUser, navItems, members, activePath }: NavProps) {
           members.map((member) => (
             <Link
               key={member.uid}
-              href={`/members/${member.uid}`}
+              href={memberPath(member.uid)}
               className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-white/[0.04]"
             >
               <div className="relative">

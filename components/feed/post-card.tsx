@@ -8,6 +8,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { VISIBILITY_LABELS } from "@/lib/constants";
+import { memberPath, postPath } from "@/lib/routes";
 import type { FeedItem } from "@/types/feed";
 
 type PostCardProps = {
@@ -51,7 +52,7 @@ export function PostCard({
             <Avatar fallback={item.author.avatarLabel} />
             <div>
               <Link
-                href={`/members/${item.author.uid}`}
+                href={memberPath(item.author.uid)}
                 className="text-left text-sm font-semibold text-[var(--text-primary)] transition-colors hover:text-[var(--accent)]"
               >
                 {item.author.displayName}
@@ -103,14 +104,14 @@ export function PostCard({
       <CardContent className="space-y-5">
         {isShare ? (
           <Link
-            href={`/posts/${item.postId}`}
+            href={postPath(item.postId)}
             className="block rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] p-4 transition-colors hover:bg-white/[0.04]"
           >
             <p className="whitespace-pre-wrap text-[1.02rem] leading-relaxed text-[var(--text-primary)]">{shareText}</p>
           </Link>
         ) : (
           <Link
-            href={`/posts/${item.postId}`}
+            href={postPath(item.postId)}
             className="block rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] p-3 transition-colors hover:bg-white/[0.04]"
           >
             <div className="flex items-start gap-3">

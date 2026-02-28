@@ -16,6 +16,7 @@ import {
   type AppNotification,
 } from "@/lib/firebase/notifications";
 import { formatRelativeDate, initialsFromName } from "@/lib/format";
+import { memberPath, postPath } from "@/lib/routes";
 
 function notificationText(item: AppNotification): string {
   const name = typeof item.data?.userName === "string" ? item.data.userName : "Bir üye";
@@ -36,10 +37,10 @@ function notificationText(item: AppNotification): string {
 
 function notificationTarget(item: AppNotification): string | null {
   if (typeof item.data?.postId === "string") {
-    return `/posts/${item.data.postId}`;
+    return postPath(item.data.postId);
   }
   if (typeof item.data?.userId === "string") {
-    return `/members/${item.data.userId}`;
+    return memberPath(item.data.userId);
   }
   return null;
 }

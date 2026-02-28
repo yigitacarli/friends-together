@@ -1,8 +1,8 @@
-﻿"use client";
+"use client";
 
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { EditPostModal } from "@/components/feed/edit-post-modal";
@@ -21,6 +21,7 @@ import {
   type FeedPost,
 } from "@/lib/firebase/posts";
 import { formatRelativeDate, toFeedAuthor } from "@/lib/format";
+import { memberPath } from "@/lib/routes";
 import type { FeedItem } from "@/types/feed";
 import type { PostCommentDoc, UserDoc } from "@/types/firestore";
 
@@ -46,8 +47,8 @@ function toFeedItem(row: FeedPost, currentUid?: string): FeedItem {
 }
 
 export default function PostDetailPage() {
-  const params = useParams<{ postId: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const [postRow, setPostRow] = useState<FeedPost | null>(null);
   const [loadingPost, setLoadingPost] = useState(true);
@@ -60,7 +61,7 @@ export default function PostDetailPage() {
   const [editingPost, setEditingPost] = useState<FeedItem | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const postId = params?.postId;
+  const postId = searchParams?.get("id")?.trim() ?? "";
 
   useEffect(() => {
     if (!user || !postId) return;
@@ -191,7 +192,9 @@ export default function PostDetailPage() {
         </Button>
       </div>
 
-      {loadingPost ? (
+      {!postId ? (
+        <Card className="p-8 text-center text-sm text-[var(--text-muted)]">Geçersiz paylaşım bağlantısı.</Card>
+      ) : loadingPost ? (
         <Card className="p-8 text-center text-sm text-[var(--text-muted)]">Paylaşım yükleniyor...</Card>
       ) : !postItem ? (
         <Card className="p-8 text-center text-sm text-[var(--text-muted)]">
@@ -240,7 +243,7 @@ export default function PostDetailPage() {
                 >
                   <div className="flex items-center justify-between gap-2">
                     <Link
-                      href={`/members/${comment.uid}`}
+                      href={memberPath(comment.uid)}
                       className="text-sm font-semibold text-[var(--text-primary)] transition-colors hover:text-[var(--accent)]"
                     >
                       {author?.displayName ?? "Üye"}

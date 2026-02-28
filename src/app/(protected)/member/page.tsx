@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Avatar } from "@/components/ui/avatar";
@@ -11,11 +11,12 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { subscribePostsByAuthor } from "@/lib/firebase/posts";
 import { subscribeUserDocument } from "@/lib/firebase/users";
 import { formatRelativeDate, initialsFromName, resolveTagLabel } from "@/lib/format";
+import { postPath } from "@/lib/routes";
 import type { PostDoc, UserDoc } from "@/types/firestore";
 
 export default function MemberProfilePage() {
-  const params = useParams<{ uid: string }>();
-  const uid = params?.uid;
+  const searchParams = useSearchParams();
+  const uid = searchParams?.get("uid")?.trim() ?? "";
   const { user } = useAuth();
   const [profile, setProfile] = useState<UserDoc | null>(null);
   const [posts, setPosts] = useState<PostDoc[]>([]);
@@ -121,7 +122,7 @@ export default function MemberProfilePage() {
               return (
                 <Link
                   key={post.postId}
-                  href={`/posts/${post.postId}`}
+                  href={postPath(post.postId)}
                   className="block rounded-lg border border-[var(--border)] bg-[var(--surface-alt)] p-4 transition-colors hover:bg-white/[0.04]"
                 >
                   <div className="flex items-center justify-between gap-3">

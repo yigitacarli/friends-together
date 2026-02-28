@@ -8,6 +8,7 @@ import { EditPostModal } from "@/components/feed/edit-post-modal";
 import { useAuth } from "@/components/providers/auth-provider";
 import type { FeedSort } from "@/lib/constants";
 import { formatRelativeDate, toFeedAuthor } from "@/lib/format";
+import { postPath } from "@/lib/routes";
 import {
   createSharePost,
   deletePost,
@@ -93,7 +94,7 @@ export default function FeedPage() {
   };
 
   const onOpenPost = (postId: string) => {
-    router.push(`/posts/${postId}`);
+    router.push(postPath(postId));
   };
 
   const onCreateShare = async (input: { text: string; visibility: PostVisibility }) => {

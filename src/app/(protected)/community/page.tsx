@@ -7,6 +7,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { subscribeMembers } from "@/lib/firebase/users";
 import { initialsFromName, resolveTagLabel } from "@/lib/format";
+import { memberPath } from "@/lib/routes";
 import type { UserDoc } from "@/types/firestore";
 
 export default function CommunityPage() {
@@ -48,7 +49,7 @@ export default function CommunityPage() {
             {members.map((member) => (
               <Link
                 key={member.uid}
-                href={`/members/${member.uid}`}
+                href={memberPath(member.uid)}
                 className="rounded-lg border border-[var(--border)] bg-[var(--surface-alt)] p-3 transition-colors hover:bg-white/[0.04]"
               >
                 <div className="flex items-center gap-3">
