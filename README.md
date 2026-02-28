@@ -31,13 +31,7 @@
 *   **Backend / Database:** Firebase (Firestore, Auth)
 *   **Stil:** Modern CSS3, Responsive Tasarım, Animasyonlar
 *   **Deploy:** GitHub Pages + Custom Domain
-
-## 🔌 Otomatik Veri Çekme
-
-*   **Kitaplar:** Open Library ile başlıktan otomatik bilgi çekilir.
-*   **Film / Dizi:** IMDb linki veya başlıktan otomatik doldurma için OMDb kullanılır.
-*   OMDb için proje köküne `.env` dosyası ekleyip şu değişkeni tanımlayın:
-
+  
 ---
 
 ## 👑 Yönetim
