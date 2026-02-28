@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-base: #0f1013;
+  --surface: #17191e;
+  --surface-alt: #13161b;
+  --text-primary: #efede8;
+  --text-secondary: #ccc8c0;
+  --text-muted: #8f8a82;
+  --border: #2b2e36;
+  --border-strong: #3a3e48;
+  --accent: #c29a62;
+  --accent-strong: #d7b17d;
+  --accent-soft: color-mix(in oklab, var(--accent) 16%, transparent);
+  --accent-foreground: #18120b;
+  --focus-ring: #d9b98a;
+}
+
+* {
+  border-color: var(--border);
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(60rem 30rem at -5% -10%, rgba(194, 154, 98, 0.1), transparent 55%),
+    linear-gradient(180deg, #101216 0%, #0c0d11 100%);
+  color: var(--text-primary);
+  font-family: var(--font-sans), "Segoe UI", sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgba(194, 154, 98, 0.32);
+  color: var(--text-primary);
+}
+
+.ft-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #4a4f5a #151821;
+}
+
+.ft-scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.ft-scrollbar::-webkit-scrollbar-track {
+  background: #151821;
+  border-radius: 999px;
+}
+
+.ft-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #5b606b, #424751);
+  border-radius: 999px;
+  border: 2px solid #151821;
+}
+
+.ft-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #6c727f, #4f5661);
+}

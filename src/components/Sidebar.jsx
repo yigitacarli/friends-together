@@ -3,6 +3,20 @@ import { useMedia } from '../context/MediaContext';
 import { useAuth } from '../context/AuthContext';
 import { getAllUsers } from '../services/storage';
 
+function SidebarLink({ active, onClick, icon, label, extra, className = '' }) {
+    return (
+        <button
+            type="button"
+            className={`sidebar-link ${active ? 'active' : ''} ${className}`.trim()}
+            onClick={onClick}
+        >
+            <span className="sidebar-link-icon" aria-hidden="true">{icon}</span>
+            <span className="sidebar-link-label">{label}</span>
+            {extra}
+        </button>
+    );
+}
+
 export default function Sidebar({ currentPage, onNavigate, isOpen, onEditProfile }) {
     const { items } = useMedia();
     const { user, profile, isLoggedIn, isOnline, getUser, isAdmin } = useAuth();
@@ -10,25 +24,52 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onEditProfile
 
     useEffect(() => {
         getAllUsers().then(setUsers);
-    }, [items, user]); // reload users if items change (active status maybe?)
+    }, [items, user]);
 
-    const members = users.filter(u => u.id !== user?.uid);
+    const members = users.filter((member) => member.id !== user?.uid);
     const myFriends = profile?.friends || [];
-    const myCount = isLoggedIn ? items.filter(i => i.userId === user?.uid).length : 0;
+    const myCount = isLoggedIn ? items.filter((item) => item.userId === user?.uid).length : 0;
 
     return (
         <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
-            {/* User info */}
+            <div className="sidebar-logo">
+                <button type="button" className="sidebar-brand" onClick={() => onNavigate('feed')}>
+                    <span className="sidebar-logo-icon" aria-hidden="true">FT</span>
+                    <span className="sidebar-brand-title">Friends Together</span>
+                </button>
+            </div>
+
             {profile ? (
                 <div className="sidebar-user">
-                    <span className="sidebar-user-avatar" onClick={() => onNavigate('my-profile')}>{profile.avatar}</span>
+                    <button
+                        type="button"
+                        className="sidebar-user-avatar-btn"
+                        onClick={() => onNavigate('my-profile')}
+                        aria-label="Profilime git"
+                    >
+                        <span className="sidebar-user-avatar">{profile.avatar}</span>
+                    </button>
                     <div className="sidebar-user-info">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <span className="sidebar-user-name" onClick={() => onNavigate('my-profile')}>{profile.displayName}</span>
-                            <button className="sidebar-edit-icon" onClick={onEditProfile} title="Profili Düzenle">⚙️</button>
+                        <div className="sidebar-user-main">
+                            <button
+                                type="button"
+                                className="sidebar-user-name"
+                                onClick={() => onNavigate('my-profile')}
+                            >
+                                {profile.displayName}
+                            </button>
+                            <button
+                                type="button"
+                                className="sidebar-edit-icon"
+                                onClick={onEditProfile}
+                                title="Profili Duzenle"
+                                aria-label="Profili duzenle"
+                            >
+                                ⚙
+                            </button>
                         </div>
-                        <span className="sidebar-user-email" style={{ color: 'var(--accent-primary)', fontWeight: 500 }}>
-                            {profile.title || 'Üye'}
+                        <span className="sidebar-user-email sidebar-user-meta">
+                            {profile.title || 'Uye'}
                         </span>
                     </div>
                 </div>
@@ -37,128 +78,105 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onEditProfile
                     <span className="sidebar-user-avatar">👀</span>
                     <div className="sidebar-user-info">
                         <span className="sidebar-user-name">Misafir</span>
-                        <span className="sidebar-user-email">Sadece görüntüleme</span>
+                        <span className="sidebar-user-email">Sadece goruntuleme</span>
                     </div>
                 </div>
             )}
 
-            <nav className="sidebar-nav">
-                <div className="sidebar-section-title">Ana Menü</div>
+            <nav className="sidebar-nav" aria-label="Ana menu">
+                <div className="sidebar-section-title">Ana Menu</div>
 
-                <div
-                    className={`sidebar-link ${currentPage === 'feed' ? 'active' : ''}`}
+                <SidebarLink
+                    active={currentPage === 'feed'}
                     onClick={() => onNavigate('feed')}
-                >
-                    <span className="sidebar-link-icon">🏠</span>
-                    <span>Akış</span>
-                </div>
+                    icon="🏠"
+                    label="Akis"
+                />
 
-                <div
-                    className={`sidebar-link ${currentPage === 'events' ? 'active' : ''}`}
+                <SidebarLink
+                    active={currentPage === 'events'}
                     onClick={() => onNavigate('events')}
-                >
-                    <span className="sidebar-link-icon">📅</span>
-                    <span>Etkinlikler</span>
-                </div>
+                    icon="📅"
+                    label="Etkinlikler"
+                />
 
-                <div
-                    className={`sidebar-link ${currentPage === 'community' ? 'active' : ''}`}
+                <SidebarLink
+                    active={currentPage === 'community'}
                     onClick={() => onNavigate('community')}
-                >
-                    <span className="sidebar-link-icon">🌐</span>
-                    <span>Topluluk</span>
-                </div>
+                    icon="🌐"
+                    label="Topluluk"
+                />
 
-                <div
-                    className={`sidebar-link ${currentPage === 'lobby' ? 'active' : ''}`}
+                <SidebarLink
+                    active={currentPage === 'lobby'}
                     onClick={() => onNavigate('lobby')}
-                >
-                    <span className="sidebar-link-icon">💬</span>
-                    <span>Meydan (Chat)</span>
-                </div>
+                    icon="💬"
+                    label="Meydan (Chat)"
+                />
 
                 {profile?.nsfwAccess && (
-                    <div
-                        className={`sidebar-link ${currentPage === 'nsfw-lobby' ? 'active' : ''}`}
+                    <SidebarLink
+                        active={currentPage === 'nsfw-lobby'}
                         onClick={() => onNavigate('nsfw-lobby')}
-                        style={{ color: '#f87171' }}
-                    >
-                        <span className="sidebar-link-icon">🔞</span>
-                        <span style={{ fontWeight: 600 }}>+18 Sohbet</span>
-                    </div>
+                        icon="🔞"
+                        label="+18 Sohbet"
+                        className="sidebar-link-nsfw"
+                    />
                 )}
 
                 {isLoggedIn && (
-                    <div
-                        className={`sidebar-link ${currentPage === 'my-profile' ? 'active' : ''}`}
+                    <SidebarLink
+                        active={currentPage === 'my-profile'}
                         onClick={() => onNavigate('my-profile')}
-                    >
-                        <span className="sidebar-link-icon">📦</span>
-                        <span>Koleksiyonum</span>
-                        {myCount > 0 && <span className="sidebar-link-count">{myCount}</span>}
-                    </div>
+                        icon="📦"
+                        label="Koleksiyonum"
+                        extra={myCount > 0 ? <span className="sidebar-link-count">{myCount}</span> : null}
+                    />
                 )}
 
-                <div
-                    className={`sidebar-link ${currentPage === 'stats' ? 'active' : ''}`}
+                <SidebarLink
+                    active={currentPage === 'stats'}
                     onClick={() => onNavigate('stats')}
-                >
-                    <span className="sidebar-link-icon">📊</span>
-                    <span>İstatistikler</span>
-                </div>
+                    icon="📊"
+                    label="Istatistikler"
+                />
 
                 {isAdmin && (
-                    <div
-                        className={`sidebar-link ${currentPage === 'admin' ? 'active' : ''}`}
+                    <SidebarLink
+                        active={currentPage === 'admin'}
                         onClick={() => onNavigate('admin')}
-                        style={{ borderTop: '1px solid var(--border)', marginTop: 8, paddingTop: 12 }}
-                    >
-                        <span className="sidebar-link-icon">👑</span>
-                        <span style={{ background: 'linear-gradient(135deg, #fcd34d, #f59e0b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 700 }}>Admin Paneli</span>
-                    </div>
+                        icon="👑"
+                        label="Admin Paneli"
+                        className="sidebar-link-admin"
+                    />
                 )}
 
                 {members.length > 0 && (
                     <>
-                        <div className="sidebar-section-title" style={{ marginTop: 12 }}>
-                            Üyeler ({members.length})
-                        </div>
-                        {members.map(u => {
-                            const online = isOnline(u.id);
-                            const isFriend = myFriends.includes(u.id);
+                        <div className="sidebar-section-title sidebar-members-title">Uyeler ({members.length})</div>
+                        {members.map((member) => {
+                            const online = isOnline(member.id);
+                            const isFriend = myFriends.includes(member.id);
+                            const memberData = getUser(member.id) || member;
                             return (
-                                <div
-                                    key={u.id}
-                                    className={`sidebar-link ${currentPage === `user-${u.id}` ? 'active' : ''}`}
-                                    onClick={() => onNavigate(`user-${u.id}`)}
+                                <button
+                                    key={member.id}
+                                    type="button"
+                                    className={`sidebar-link ${currentPage === `user-${member.id}` ? 'active' : ''}`}
+                                    onClick={() => onNavigate(`user-${member.id}`)}
                                 >
-                                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                                        <span className="sidebar-link-icon">{u.avatar || '🧑‍💻'}</span>
-                                        <span style={{
-                                            position: 'absolute',
-                                            bottom: -2,
-                                            right: -2,
-                                            width: 10,
-                                            height: 10,
-                                            borderRadius: '50%',
-                                            background: online ? '#34d399' : '#6b7280',
-                                            border: '2px solid var(--bg-secondary)',
-                                            zIndex: 2
-                                        }} title={online ? 'Çevrimiçi' : 'Çevrimdışı'} />
-                                    </div>
-                                    <span style={{
-                                        flex: 1,
-                                        whiteSpace: 'nowrap',
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis',
-                                        color: isFriend ? 'var(--text-primary)' : 'var(--text-secondary)'
-                                    }}>
-                                        {u.displayName}
+                                    <span className="sidebar-member-avatar-wrap">
+                                        <span className="sidebar-link-icon">{memberData.avatar || '🧑'}</span>
+                                        <span
+                                            className={`sidebar-member-status ${online ? 'online' : 'offline'}`}
+                                            title={online ? 'Cevrimici' : 'Cevrimdisi'}
+                                        />
                                     </span>
-                                    {isFriend && (
-                                        <span style={{ fontSize: '0.8rem', opacity: 0.8 }} title="Arkadaşınız">🤝</span>
-                                    )}
-                                </div>
+                                    <span className={`sidebar-link-label sidebar-member-name ${isFriend ? 'friend' : ''}`}>
+                                        {memberData.displayName}
+                                    </span>
+                                    {isFriend && <span className="sidebar-friend-badge" title="Arkadasin">🤝</span>}
+                                </button>
                             );
                         })}
                     </>
