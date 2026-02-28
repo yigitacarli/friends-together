@@ -38,10 +38,6 @@
 *   **Film / Dizi:** IMDb linki veya başlıktan otomatik doldurma için OMDb kullanılır.
 *   OMDb için proje köküne `.env` dosyası ekleyip şu değişkeni tanımlayın:
 
-```bash
-VITE_OMDB_API_KEY=senin_anahtarin
-```
-
 ---
 
 ## 👑 Yönetim
