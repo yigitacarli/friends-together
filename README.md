@@ -94,46 +94,6 @@ Repository Secrets (önerilen):
 
 Not: Workflow içinde geriye dönük uyumluluk için `VITE_*` secret fallback desteği de vardır.
 
-## Güvenlik
-
-### 1) "API key açıkta" uyarısı normal mi?
-
-Kısmen normal. Firebase Web API key (`NEXT_PUBLIC_FIREBASE_API_KEY`) istemci tarafında görünür olmak zorundadır.
-Bu key tek başına gizli veri erişimi vermez.
-
-Asıl güvenliği sağlayanlar:
-
-- Firestore Security Rules
-- Auth zorunluluğu
-- Rol tabanlı yetki
-- Gerekirse App Check
-
-### 2) Gerçek risk nerede?
-
-Aşağıdakiler repo'ya girerse risklidir:
-
-- Service account JSON
-- `private_key`
-- Admin SDK gizli anahtarları
-- `.env.local` içindeki özel değerler
-
-Bu repoda izlenen dosyalarda bu tip gizli anahtar bulunmamalıdır.
-
-### 3) Hemen yapman gerekenler
-
-1. Google Cloud Console'da Web API key için **HTTP referrer restriction** aç:
-   - `https://friendstogether.com.tr/*`
-   - `https://www.friendstogether.com.tr/*`
-   - `http://localhost:*/*`
-2. API restriction ile sadece gerekli API'leri açık bırak.
-3. Firestore rules'u sıkılaştır (aşağıdaki örnek).
-4. Şüphe varsa key rotate et.
-5. Firebase App Check'i etkinleştir (özellikle abuse önleme için).
-
-## Örnek Firestore Rules
-
-Detaylı örnek: `firestore.rules.example`
-
 ## Lisans
 
 Bu proje özel kullanım içindir.
