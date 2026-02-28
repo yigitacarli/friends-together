@@ -1,0 +1,73 @@
+﻿rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isMe(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function isAdmin() {
+      return signedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    match /users/{uid} {
+      allow read: if signedIn();
+      allow create: if isMe(uid);
+      allow update: if isMe(uid) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /invites/{email} {
+      allow read, write: if isAdmin();
+    }
+
+    match /settings/inviteConfig {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /posts/{postId} {
+      allow read: if signedIn() && (
+        resource.data.visibility == 'herkes' ||
+        resource.data.authorUid == request.auth.uid ||
+        resource.data.visibility == 'arkadaslar' // TODO: arkadaş kontrolü eklenmeli
+      );
+
+      allow create: if signedIn() && request.resource.data.authorUid == request.auth.uid;
+      allow update, delete: if signedIn() && (
+        resource.data.authorUid == request.auth.uid || isAdmin()
+      );
+
+      match /likes/{uid} {
+        allow read: if signedIn();
+        allow create, delete: if signedIn() && request.auth.uid == uid;
+      }
+
+      match /comments/{commentId} {
+        allow read: if signedIn();
+        allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+        allow update, delete: if signedIn() && (
+          resource.data.uid == request.auth.uid || isAdmin()
+        );
+      }
+    }
+
+    match /chat_messages/{messageId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if signedIn() &&
+        (resource.data.toUserId == request.auth.uid || isAdmin());
+      allow update, delete: if signedIn() &&
+        (resource.data.toUserId == request.auth.uid || isAdmin());
+      allow create: if isAdmin();
+    }
+  }
+}
