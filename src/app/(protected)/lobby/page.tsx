@@ -6,7 +6,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/components/providers/auth-provider";
-import { sendLobbyMessage, subscribeLobbyMessages, type LobbyMessage } from "@/lib/firebase/chat";
+import { clearLobbyMessages, sendLobbyMessage, subscribeLobbyMessages, type LobbyMessage } from "@/lib/firebase/chat";
 import { initialsFromName } from "@/lib/format";
 
 function formatChatTime(date: Date): string {
@@ -17,11 +17,12 @@ function formatChatTime(date: Date): string {
 }
 
 export default function LobbyPage() {
-  const { user, profile } = useAuth();
+  const { user, profile, isAdmin } = useAuth();
   const [messages, setMessages] = useState<LobbyMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -69,11 +70,42 @@ export default function LobbyPage() {
     }
   };
 
+  const handleClearLobby = async () => {
+    if (!isAdmin) return;
+    const confirmed = window.confirm("Meydan mesajlarını herkes için temizlemek istediğine emin misin?");
+    if (!confirmed) return;
+
+    setClearing(true);
+    setError(null);
+    try {
+      await clearLobbyMessages();
+    } catch (clearError) {
+      setError(clearError instanceof Error ? clearError.message : "Meydan temizlenemedi.");
+    } finally {
+      setClearing(false);
+    }
+  };
+
   return (
     <section className="mx-auto w-full max-w-3xl space-y-3 px-3 py-4 md:space-y-4 md:px-8 md:py-8">
       <Card className="p-4 md:p-6">
-        <h1 className="font-[family-name:var(--font-display)] text-2xl md:text-3xl">Sohbet Alanı</h1>
-        <p className="mt-2 text-sm text-[var(--text-muted)]">Tüm üyelerin görebildiği ortak sohbet alanı.</p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="font-[family-name:var(--font-display)] text-2xl md:text-3xl">Sohbet Alanı</h1>
+            <p className="mt-2 text-sm text-[var(--text-muted)]">Tüm üyelerin görebildiği ortak sohbet alanı.</p>
+          </div>
+          {isAdmin ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="border-rose-400/45 text-rose-200 hover:bg-rose-400/10 hover:text-rose-100"
+              onClick={handleClearLobby}
+              disabled={clearing}
+            >
+              {clearing ? "Temizleniyor..." : "Meydanı Temizle"}
+            </Button>
+          ) : null}
+        </div>
       </Card>
 
       <Card className="p-3 sm:p-4 md:p-5">

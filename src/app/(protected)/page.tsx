@@ -38,7 +38,10 @@ function toFeedItems(rows: FeedPost[], currentUid?: string): FeedItem[] {
       likeCount: row.post.likeCount,
       commentCount: row.post.commentCount,
       likedByMe: row.likedByMe,
+      commentedByMe: row.commentedByMe,
       isOwner: currentUid ? row.post.authorUid === currentUid : false,
+      canEdit: currentUid ? row.post.authorUid === currentUid : false,
+      canDelete: currentUid ? row.post.authorUid === currentUid : false,
       author: toFeedAuthor(row.author, row.post.authorUid),
     };
   });
@@ -46,7 +49,7 @@ function toFeedItems(rows: FeedPost[], currentUid?: string): FeedItem[] {
 
 export default function FeedPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [rows, setRows] = useState<FeedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -79,7 +82,15 @@ export default function FeedPage() {
     return unsubscribe;
   }, [sort, typeFilter, user]);
 
-  const items = useMemo(() => toFeedItems(rows, user?.uid), [rows, user?.uid]);
+  const items = useMemo(
+    () =>
+      toFeedItems(rows, user?.uid).map((item) => ({
+        ...item,
+        canEdit: item.isOwner,
+        canDelete: item.isOwner || isAdmin,
+      })),
+    [isAdmin, rows, user?.uid],
+  );
 
   const onLikeToggle = async (postId: string) => {
     if (!user) return;
@@ -114,13 +125,13 @@ export default function FeedPage() {
   };
 
   const onDeletePost = async (item: FeedItem) => {
-    if (!user || !item.isOwner) return;
+    if (!user || !item.canDelete) return;
     const confirmed = window.confirm("Bu paylaşımı silmek istediğine emin misin?");
     if (!confirmed) return;
 
     setPendingActionPostId(item.postId);
     try {
-      await deletePost(item.postId, user.uid);
+      await deletePost(item.postId, user.uid, isAdmin);
     } catch (deleteError) {
       setError(deleteError instanceof Error ? deleteError.message : "Paylaşım silinemedi.");
     } finally {

@@ -24,7 +24,10 @@ export type FeedItem = {
   likeCount: number;
   commentCount: number;
   likedByMe: boolean;
+  commentedByMe?: boolean;
   isOwner?: boolean;
+  canEdit?: boolean;
+  canDelete?: boolean;
   author: FeedAuthor;
 };
 

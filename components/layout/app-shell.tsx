@@ -73,10 +73,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[var(--bg-base)] text-[var(--text-primary)]">
+    <div className="relative h-screen overflow-hidden bg-[var(--bg-base)] text-[var(--text-primary)]">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(70rem_35rem_at_15%_-10%,rgba(194,154,98,0.18),transparent_60%),radial-gradient(45rem_25rem_at_95%_0%,rgba(255,255,255,0.05),transparent_55%)]" />
-      <div className="relative flex min-h-screen">
-        <aside className="hidden w-72 border-r border-[var(--border)] bg-[var(--surface-alt)]/80 backdrop-blur md:block">
+      <div className="relative flex h-full">
+        <aside className="hidden h-screen w-72 overflow-y-auto border-r border-[var(--border)] bg-[var(--surface-alt)]/80 backdrop-blur md:block">
           <Nav currentUser={currentUser} navItems={navItems} members={members} activePath={pathname} />
         </aside>
 
@@ -88,20 +88,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               onClick={() => setSidebarOpen(false)}
               aria-label="Menüyü kapat"
             />
-            <aside className="fixed inset-y-0 left-0 z-40 w-72 border-r border-[var(--border)] bg-[var(--surface-alt)]/95 shadow-2xl backdrop-blur md:hidden">
+            <aside className="fixed inset-y-0 left-0 z-40 w-72 overflow-y-auto border-r border-[var(--border)] bg-[var(--surface-alt)]/95 shadow-2xl backdrop-blur md:hidden">
               <Nav currentUser={currentUser} navItems={navItems} members={members} activePath={pathname} />
             </aside>
           </>
         ) : null}
 
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex h-screen flex-1 flex-col overflow-hidden">
           <Header
             onMenuToggle={() => setSidebarOpen(true)}
             onAddClick={openComposer}
             onLogoutClick={handleLogout}
             loggingOut={loggingOut}
           />
-          {children}
+          <main className="ft-scrollbar flex-1 overflow-y-auto">{children}</main>
         </div>
       </div>
     </div>

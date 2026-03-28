@@ -36,6 +36,7 @@ export type FeedPost = {
   post: PostDoc;
   author: UserDoc | null;
   likedByMe: boolean;
+  commentedByMe: boolean;
 };
 
 export type CreatePostInput = {
@@ -298,6 +299,27 @@ async function loadLikeMap(postIds: string[], uid: string): Promise<Map<string, 
   return map;
 }
 
+async function loadCommentMetaMap(
+  postIds: string[],
+  uid: string,
+): Promise<Map<string, { count: number; commentedByMe: boolean }>> {
+  const validPostIds = uniqueNonEmpty(postIds);
+  const entries = await Promise.all(
+    validPostIds.map(async (postId) => {
+      const commentsSnapshot = await getDocs(collection(db, POSTS_COLLECTION, postId, "comments"));
+      const commentedByMe = commentsSnapshot.docs.some((commentDoc) => {
+        const comment = normalizeCommentDoc(commentDoc.id, commentDoc.data() as RawComment);
+        return comment.uid === uid;
+      });
+      return [postId, { count: commentsSnapshot.size, commentedByMe }] as const;
+    }),
+  );
+
+  const map = new Map<string, { count: number; commentedByMe: boolean }>();
+  entries.forEach(([postId, meta]) => map.set(postId, meta));
+  return map;
+}
+
 function sortPosts(items: FeedPost[], sort: FeedSort): FeedPost[] {
   const cloned = [...items];
   if (sort === "populer") {
@@ -328,15 +350,20 @@ export function subscribeFeedPosts(params: SubscribeFeedParams): Unsubscribe {
 
       const uniqueAuthorUids = uniqueNonEmpty(typedPosts.map((post) => post.authorUid));
       const postIds = typedPosts.map((post) => post.postId);
-      const [authorsMap, likesMap] = await Promise.all([
+      const [authorsMap, likesMap, commentMetaMap] = await Promise.all([
         loadAuthors(uniqueAuthorUids),
         loadLikeMap(postIds, params.uid),
+        loadCommentMetaMap(postIds, params.uid),
       ]);
 
       const resolved: FeedPost[] = typedPosts.map((post) => ({
-        post,
+        post: {
+          ...post,
+          commentCount: commentMetaMap.get(post.postId)?.count ?? post.commentCount,
+        },
         author: authorsMap.get(post.authorUid) ?? null,
         likedByMe: likesMap.get(post.postId) ?? false,
+        commentedByMe: commentMetaMap.get(post.postId)?.commentedByMe ?? false,
       }));
 
       params.onData(sortPosts(resolved, params.sort));
@@ -435,7 +462,7 @@ export async function updatePost(input: UpdatePostInput): Promise<void> {
   });
 }
 
-export async function deletePost(postId: string, uid: string): Promise<void> {
+export async function deletePost(postId: string, uid: string, isAdmin = false): Promise<void> {
   const postRef = doc(db, POSTS_COLLECTION, postId);
   const snapshot = await getDoc(postRef);
   if (!snapshot.exists()) {
@@ -443,7 +470,7 @@ export async function deletePost(postId: string, uid: string): Promise<void> {
   }
 
   const existing = normalizePostDoc(snapshot.id, snapshot.data() as RawPost);
-  if (existing.authorUid !== uid) {
+  if (existing.authorUid !== uid && !isAdmin) {
     throw new Error("Bu paylaşımı silme iznin yok.");
   }
 
@@ -519,17 +546,25 @@ export function subscribePostById(
         return;
       }
 
-      const [authorSnapshot, likeSnapshot] = await Promise.all([
+      const [authorSnapshot, likeSnapshot, commentsSnapshot] = await Promise.all([
         getDoc(doc(db, USERS_COLLECTION, post.authorUid)),
         getDoc(doc(db, POSTS_COLLECTION, postId, "likes", uid)),
+        getDocs(collection(db, POSTS_COLLECTION, postId, "comments")),
       ]);
 
       onData({
-        post,
+        post: {
+          ...post,
+          commentCount: commentsSnapshot.size,
+        },
         author: authorSnapshot.exists()
           ? normalizeUserDoc(authorSnapshot.id, authorSnapshot.data() as Record<string, unknown>)
           : null,
         likedByMe: likeSnapshot.exists(),
+        commentedByMe: commentsSnapshot.docs.some((commentDoc) => {
+          const comment = normalizeCommentDoc(commentDoc.id, commentDoc.data() as RawComment);
+          return comment.uid === uid;
+        }),
       });
     },
     (error) => {

@@ -41,7 +41,10 @@ function toFeedItem(row: FeedPost, currentUid?: string): FeedItem {
     likeCount: row.post.likeCount,
     commentCount: row.post.commentCount,
     likedByMe: row.likedByMe,
+    commentedByMe: row.commentedByMe,
     isOwner: currentUid ? row.post.authorUid === currentUid : false,
+    canEdit: currentUid ? row.post.authorUid === currentUid : false,
+    canDelete: currentUid ? row.post.authorUid === currentUid : false,
     author: toFeedAuthor(row.author, row.post.authorUid),
   };
 }
@@ -49,7 +52,7 @@ function toFeedItem(row: FeedPost, currentUid?: string): FeedItem {
 export default function PostDetailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [postRow, setPostRow] = useState<FeedPost | null>(null);
   const [loadingPost, setLoadingPost] = useState(true);
   const [comments, setComments] = useState<PostCommentDoc[]>([]);
@@ -111,7 +114,22 @@ export default function PostDetailPage() {
     };
   }, [comments]);
 
-  const postItem = useMemo(() => (postRow ? toFeedItem(postRow, user?.uid) : null), [postRow, user?.uid]);
+  const commentedByMe = useMemo(
+    () => comments.some((comment) => comment.uid === user?.uid),
+    [comments, user?.uid],
+  );
+
+  const postItem = useMemo(() => {
+    if (!postRow) return null;
+    const item = toFeedItem(postRow, user?.uid);
+    return {
+      ...item,
+      commentCount: comments.length,
+      commentedByMe,
+      canEdit: item.isOwner,
+      canDelete: item.isOwner || isAdmin,
+    };
+  }, [commentedByMe, comments.length, isAdmin, postRow, user?.uid]);
 
   const handleLikeToggle = async () => {
     if (!user || !postId) return;
@@ -126,13 +144,13 @@ export default function PostDetailPage() {
   };
 
   const handleDeletePost = async (item: FeedItem) => {
-    if (!user || !item.isOwner) return;
+    if (!user || !item.canDelete) return;
     const confirmed = window.confirm("Bu paylaşımı silmek istediğine emin misin?");
     if (!confirmed) return;
 
     setPendingActionPostId(item.postId);
     try {
-      await deletePost(item.postId, user.uid);
+      await deletePost(item.postId, user.uid, isAdmin);
       router.replace("/");
     } catch (deleteError) {
       setError(deleteError instanceof Error ? deleteError.message : "Paylaşım silinemedi.");

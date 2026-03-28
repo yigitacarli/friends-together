@@ -1,12 +1,14 @@
 ﻿import {
   addDoc,
   collection,
+  getDocs,
   limit,
   onSnapshot,
   orderBy,
   query,
   serverTimestamp,
   Timestamp,
+  writeBatch,
   type Unsubscribe,
 } from "firebase/firestore";
 
@@ -104,4 +106,18 @@ export async function sendLobbyMessage(input: SendLobbyMessageInput): Promise<vo
     text: cleanText,
     createdAt: serverTimestamp(),
   });
+}
+
+export async function clearLobbyMessages(): Promise<number> {
+  const snapshot = await getDocs(collection(db, CHAT_COLLECTION));
+  if (snapshot.empty) {
+    return 0;
+  }
+
+  const batch = writeBatch(db);
+  snapshot.docs.forEach((messageDoc) => {
+    batch.delete(messageDoc.ref);
+  });
+  await batch.commit();
+  return snapshot.size;
 }

@@ -37,6 +37,8 @@ export function PostCard({
   actionsDisabled,
 }: PostCardProps) {
   const isShare = item.postKind === "share";
+  const canEdit = item.canEdit ?? item.isOwner;
+  const canDelete = item.canDelete ?? item.isOwner;
   const cleanTitle = item.title.trim();
   const cleanReview = item.reviewText.trim();
   const duplicateTitleAndReview =
@@ -71,30 +73,34 @@ export function PostCard({
                 <TypeChip kind="status" value={item.status} />
               </>
             )}
-            {item.isOwner ? (
+            {canEdit || canDelete ? (
               <>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  disabled={actionsDisabled}
-                  onClick={() => onEditClick?.(item)}
-                  aria-label="Paylaşımı düzenle"
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-rose-300 hover:text-rose-200"
-                  disabled={actionsDisabled}
-                  onClick={() => onDeleteClick?.(item)}
-                  aria-label="Paylaşımı sil"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                {canEdit ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    disabled={actionsDisabled}
+                    onClick={() => onEditClick?.(item)}
+                    aria-label="Paylaşımı düzenle"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                ) : null}
+                {canDelete ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-rose-300 hover:text-rose-200"
+                    disabled={actionsDisabled}
+                    onClick={() => onDeleteClick?.(item)}
+                    aria-label="Paylaşımı sil"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                ) : null}
               </>
             ) : null}
           </div>
@@ -144,6 +150,7 @@ export function PostCard({
             likeCount={item.likeCount}
             commentCount={item.commentCount}
             likedByMe={item.likedByMe}
+            commentedByMe={item.commentedByMe}
             onLikeToggle={() => onLikeToggle(item.postId)}
             onCommentClick={() => onCommentClick(item.postId)}
             likeDisabled={likeDisabled}
